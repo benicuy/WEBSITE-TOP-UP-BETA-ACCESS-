@@ -8,11 +8,11 @@ let promos = [];
 let vouchers = [];
 let appliedVoucher = null;
 let appStats = {
-    totalUsers: 1247,
-    totalTransactions: 8923,
-    totalDiamonds: 456789,
-    totalRevenue: 189750000,
-    totalVouchers: 156
+    totalUsers: 0,
+    totalTransactions: 0,
+    totalDiamonds: 0,
+    totalRevenue: 0,
+    totalVouchers: 0
 };
 
 // Debug mode
@@ -39,23 +39,6 @@ function loadData() {
     if (savedUsers) {
         users = JSON.parse(savedUsers);
         console.log('Users loaded:', users.length);
-        
-        // Cek apakah admin sudah ada
-        const adminExists = users.some(u => u.role === 'admin');
-        if (!adminExists) {
-            console.log('Admin not found, adding default admin...');
-            users.push({
-                id: users.length + 1,
-                name: 'Admin Benoy',
-                email: 'admin@benoystore.com',
-                password: 'admin123',
-                role: 'admin',
-                vouchers: [],
-                voucherHistory: [],
-                createdAt: new Date().toISOString()
-            });
-            localStorage.setItem('users', JSON.stringify(users));
-        }
     } else {
         console.log('No users found, creating default users...');
         users = [
@@ -66,7 +49,6 @@ function loadData() {
                 password: 'admin123', 
                 role: 'admin',
                 vouchers: [],
-                voucherHistory: [],
                 createdAt: new Date().toISOString()
             },
             { 
@@ -76,7 +58,6 @@ function loadData() {
                 password: 'user123', 
                 role: 'user',
                 vouchers: [],
-                voucherHistory: [],
                 createdAt: new Date().toISOString()
             }
         ];
@@ -87,7 +68,9 @@ function loadData() {
     const savedProducts = localStorage.getItem('products');
     if (savedProducts) {
         products = JSON.parse(savedProducts);
+        console.log('Products loaded:', products.length);
     } else {
+        console.log('No products found, creating default products...');
         products = [
             { id: 1, game: 'ml', name: '86 Diamonds', diamond: 86, price: 17000, bonus: '', status: 'active' },
             { id: 2, game: 'ml', name: '172 Diamonds', diamond: 172, price: 33000, bonus: '', status: 'active' },
@@ -106,6 +89,7 @@ function loadData() {
     const savedTransactions = localStorage.getItem('transactions');
     if (savedTransactions) {
         transactions = JSON.parse(savedTransactions);
+        console.log('Transactions loaded:', transactions.length);
     } else {
         transactions = [];
         localStorage.setItem('transactions', JSON.stringify(transactions));
@@ -117,36 +101,28 @@ function loadData() {
         promos = JSON.parse(savedPromos);
     } else {
         promos = [
-            { code: 'WELCOME10', discount: 10, minPurchase: 20000, expiry: '2024-12-31', type: 'public' },
-            { code: 'DIAMOND20', discount: 20, minPurchase: 50000, expiry: '2024-12-31', type: 'public' }
+            { code: 'WELCOME10', discount: 10, minPurchase: 20000, expiry: '2024-12-31' },
+            { code: 'DIAMOND20', discount: 20, minPurchase: 50000, expiry: '2024-12-31' }
         ];
         localStorage.setItem('promos', JSON.stringify(promos));
     }
     
-    // Load vouchers
-    loadVouchers();
+    // Update app stats
+    appStats.totalUsers = users.length;
+    appStats.totalTransactions = transactions.length;
+    appStats.totalDiamonds = transactions.reduce((sum, t) => sum + (t.product?.diamond || 0), 0);
+    appStats.totalRevenue = transactions.reduce((sum, t) => sum + (t.total || 0), 0);
+    appStats.totalVouchers = vouchers.reduce((sum, v) => sum + (v.claimedBy?.length || 0), 0);
     
-    // Load app stats
-    const savedStats = localStorage.getItem('appStats');
-    if (savedStats) {
-        appStats = JSON.parse(savedStats);
-    } else {
-        appStats.totalUsers = users.length;
-        appStats.totalTransactions = transactions.length;
-        appStats.totalDiamonds = transactions.reduce((sum, t) => sum + (t.product?.diamond || 0), 0);
-        appStats.totalRevenue = transactions.reduce((sum, t) => sum + (t.total || 0), 0);
-        appStats.totalVouchers = vouchers.reduce((sum, v) => sum + v.claimedBy.length, 0);
-        localStorage.setItem('appStats', JSON.stringify(appStats));
-    }
+    localStorage.setItem('appStats', JSON.stringify(appStats));
 }
 
-// Load vouchers from localStorage
+// Load vouchers
 function loadVouchers() {
     const savedVouchers = localStorage.getItem('vouchers');
     if (savedVouchers) {
         vouchers = JSON.parse(savedVouchers);
     } else {
-        // Default vouchers
         vouchers = [
             { 
                 id: 'VCH001', 
@@ -182,29 +158,14 @@ function loadVouchers() {
                 id: 'VCH003', 
                 code: 'CASHBACK5', 
                 name: 'Cashback 5%', 
-                description: 'Dapatkan cashback 5% untuk transaksi',
+                description: 'Dapatkan cashback 5%',
                 discount: 5,
                 type: 'cashback',
-                minPurchase: 50000,
                 forGame: 'all',
+                minPurchase: 50000,
                 expiresAt: '2024-12-31',
                 claimedBy: [],
                 maxClaims: 200,
-                active: true,
-                createdAt: new Date().toISOString()
-            },
-            { 
-                id: 'VCH004', 
-                code: 'ML20', 
-                name: 'Voucher Mobile Legends 20%', 
-                description: 'Diskon 20% khusus Mobile Legends',
-                discount: 20, 
-                minPurchase: 50000,
-                type: 'discount',
-                forGame: 'ml',
-                expiresAt: '2024-12-31',
-                claimedBy: [],
-                maxClaims: 75,
                 active: true,
                 createdAt: new Date().toISOString()
             }
@@ -212,11 +173,66 @@ function loadVouchers() {
         localStorage.setItem('vouchers', JSON.stringify(vouchers));
     }
     
-    // Tampilkan voucher di halaman
     displayVouchers();
 }
 
-// Display vouchers on page
+// ============= PRODUCT FUNCTIONS =============
+function loadProducts() {
+    const productGrid = document.getElementById('productGrid');
+    if (!productGrid) return;
+    
+    const activeProducts = products.filter(p => p.status === 'active');
+    
+    productGrid.innerHTML = activeProducts.map(product => {
+        const gameNames = {
+            'ml': 'Mobile Legends',
+            'ff': 'Free Fire',
+            'pubg': 'PUBG Mobile',
+            'cod': 'COD Mobile'
+        };
+        
+        return `
+            <div class="product-card">
+                <div class="product-badge">${gameNames[product.game]}</div>
+                <div class="product-name">${product.name}</div>
+                <div class="product-price">Rp ${formatRupiah(product.price)}</div>
+                <button class="btn-buy" onclick="openOrderModal(${product.id})" ${!currentUser ? 'disabled' : ''}>
+                    ${currentUser ? 'Beli Sekarang' : 'Login untuk Membeli'}
+                </button>
+            </div>
+        `;
+    }).join('');
+}
+
+function filterProducts(game) {
+    const productGrid = document.getElementById('productGrid');
+    if (!productGrid) return;
+    
+    let filteredProducts = products.filter(p => p.status === 'active');
+    if (game !== 'all') {
+        filteredProducts = filteredProducts.filter(p => p.game === game);
+    }
+    
+    const gameNames = {
+        'ml': 'Mobile Legends',
+        'ff': 'Free Fire',
+        'pubg': 'PUBG Mobile',
+        'cod': 'COD Mobile'
+    };
+    
+    productGrid.innerHTML = filteredProducts.map(product => `
+        <div class="product-card">
+            <div class="product-badge">${gameNames[product.game]}</div>
+            <div class="product-name">${product.name}</div>
+            <div class="product-price">Rp ${formatRupiah(product.price)}</div>
+            <button class="btn-buy" onclick="openOrderModal(${product.id})" ${!currentUser ? 'disabled' : ''}>
+                ${currentUser ? 'Beli Sekarang' : 'Login untuk Membeli'}
+            </button>
+        </div>
+    `).join('');
+}
+
+// ============= VOUCHER FUNCTIONS =============
 function displayVouchers() {
     const voucherGrid = document.getElementById('voucherGrid');
     if (!voucherGrid) return;
@@ -256,9 +272,6 @@ function displayVouchers() {
     }
 }
 
-// ============= VOUCHER FUNCTIONS =============
-
-// Claim voucher
 function claimVoucher(voucherId) {
     if (!currentUser) {
         showToast('warning', 'Silakan login untuk klaim voucher!');
@@ -300,7 +313,6 @@ function claimVoucher(voucherId) {
         id: voucher.id,
         code: voucher.code,
         name: voucher.name,
-        description: voucher.description,
         discount: voucher.discount,
         minPurchase: voucher.minPurchase,
         type: voucher.type,
@@ -319,16 +331,11 @@ function claimVoucher(voucherId) {
     localStorage.setItem('users', JSON.stringify(users));
     localStorage.setItem('vouchers', JSON.stringify(vouchers));
     
-    // Update stats
-    appStats.totalVouchers++;
-    localStorage.setItem('appStats', JSON.stringify(appStats));
-    
     showToast('success', `Voucher ${voucher.code} berhasil diklaim!`);
     displayVouchers();
     updateUserVoucherCount();
 }
 
-// Show user vouchers
 function showUserVouchers() {
     if (!currentUser) {
         showToast('warning', 'Silakan login terlebih dahulu!');
@@ -341,7 +348,6 @@ function showUserVouchers() {
     const userVouchers = user.vouchers || [];
     const now = new Date();
     
-    // Filter voucher yang masih berlaku
     const activeVouchers = userVouchers.filter(v => {
         const expiryDate = new Date(v.expiresAt);
         return expiryDate > now && !v.used;
@@ -363,10 +369,9 @@ function showUserVouchers() {
     });
     
     showToast('info', message);
-    document.getElementById('userMenu').classList.add('hidden');
+    document.getElementById('userMenu')?.classList.add('hidden');
 }
 
-// Show available vouchers to claim
 function showAvailableVouchers() {
     if (!currentUser) {
         showToast('warning', 'Silakan login untuk lihat voucher!');
@@ -398,10 +403,9 @@ function showAvailableVouchers() {
     message += 'Kunjungi halaman Voucher untuk klaim';
     
     showToast('info', message);
-    document.getElementById('userMenu').classList.add('hidden');
+    document.getElementById('userMenu')?.classList.add('hidden');
 }
 
-// Apply voucher at checkout
 function applyVoucher(voucherCode) {
     if (!currentUser) {
         showToast('warning', 'Silakan login terlebih dahulu!');
@@ -452,15 +456,25 @@ function applyVoucher(voucherCode) {
     const totalAfterDiscount = totalBeforeDiscount - discountAmount;
     
     // Update UI
-    document.getElementById('voucherInfoBox').classList.remove('hidden');
-    document.getElementById('voucherAppliedInfo').innerHTML = `
-        <strong>${voucher.code}</strong> - Diskon ${voucher.discount}% (${voucher.type === 'cashback' ? 'Cashback' : 'Langsung'})
-    `;
+    const voucherInfoBox = document.getElementById('voucherInfoBox');
+    const discountRow = document.getElementById('discountRow');
+    const totalPayment = document.getElementById('totalPayment');
+    const paymentTotal = document.getElementById('paymentTotal');
     
-    document.getElementById('discountRow').classList.remove('hidden');
-    document.getElementById('discountAmount').textContent = `-Rp ${formatRupiah(Math.round(discountAmount))}`;
-    document.getElementById('totalPayment').textContent = `Rp ${formatRupiah(Math.round(totalAfterDiscount))}`;
-    document.getElementById('paymentTotal').textContent = `Rp ${formatRupiah(Math.round(totalAfterDiscount))}`;
+    if (voucherInfoBox) {
+        voucherInfoBox.classList.remove('hidden');
+        document.getElementById('voucherAppliedInfo').innerHTML = `
+            <strong>${voucher.code}</strong> - Diskon ${voucher.discount}%
+        `;
+    }
+    
+    if (discountRow) {
+        discountRow.classList.remove('hidden');
+        document.getElementById('discountAmount').textContent = `-Rp ${formatRupiah(Math.round(discountAmount))}`;
+    }
+    
+    if (totalPayment) totalPayment.textContent = `Rp ${formatRupiah(Math.round(totalAfterDiscount))}`;
+    if (paymentTotal) paymentTotal.textContent = `Rp ${formatRupiah(Math.round(totalAfterDiscount))}`;
     
     showToast('success', `Voucher ${voucher.code} berhasil digunakan! Diskon ${voucher.discount}%`);
     
@@ -474,24 +488,29 @@ function applyVoucher(voucherCode) {
     }
 }
 
-// Remove applied voucher
 function removeVoucher() {
     appliedVoucher = null;
     
-    // Kembalikan total ke harga normal
-    const totalBeforeDiscount = selectedProduct.price + 1000;
-    document.getElementById('totalPayment').textContent = `Rp ${formatRupiah(totalBeforeDiscount)}`;
-    document.getElementById('paymentTotal').textContent = `Rp ${formatRupiah(totalBeforeDiscount)}`;
+    if (!selectedProduct) return;
     
-    // Sembunyikan info voucher
-    document.getElementById('voucherInfoBox').classList.add('hidden');
-    document.getElementById('discountRow').classList.add('hidden');
-    document.getElementById('promoMessage').innerHTML = '';
+    const totalBeforeDiscount = selectedProduct.price + 1000;
+    
+    const totalPayment = document.getElementById('totalPayment');
+    const paymentTotal = document.getElementById('paymentTotal');
+    const voucherInfoBox = document.getElementById('voucherInfoBox');
+    const discountRow = document.getElementById('discountRow');
+    
+    if (totalPayment) totalPayment.textContent = `Rp ${formatRupiah(totalBeforeDiscount)}`;
+    if (paymentTotal) paymentTotal.textContent = `Rp ${formatRupiah(totalBeforeDiscount)}`;
+    if (voucherInfoBox) voucherInfoBox.classList.add('hidden');
+    if (discountRow) discountRow.classList.add('hidden');
+    
+    const promoMessage = document.getElementById('promoMessage');
+    if (promoMessage) promoMessage.innerHTML = '';
     
     showToast('info', 'Voucher dibatalkan');
 }
 
-// Mark voucher as used after successful transaction
 function markVoucherAsUsed() {
     if (!currentUser || !appliedVoucher) return;
     
@@ -502,14 +521,12 @@ function markVoucherAsUsed() {
     if (voucher) {
         voucher.used = true;
         voucher.usedAt = new Date().toISOString();
-        voucher.usedOnTransaction = Date.now();
         localStorage.setItem('users', JSON.stringify(users));
     }
     
     appliedVoucher = null;
 }
 
-// Update user voucher count in menu
 function updateUserVoucherCount() {
     if (!currentUser) return;
     
@@ -528,61 +545,6 @@ function updateUserVoucherCount() {
     }
 }
 
-// ============= PRODUCT FUNCTIONS =============
-function loadProducts() {
-    const productGrid = document.getElementById('productGrid');
-    if (!productGrid) return;
-    
-    const activeProducts = products.filter(p => p.status === 'active');
-    
-    productGrid.innerHTML = activeProducts.map(product => {
-        const gameNames = {
-            'ml': 'Mobile Legends',
-            'ff': 'Free Fire',
-            'pubg': 'PUBG Mobile',
-            'cod': 'COD Mobile'
-        };
-        
-        return `
-            <div class="product-card">
-                <div class="product-badge">${gameNames[product.game]}</div>
-                <div class="product-name">${product.name}</div>
-                <div class="product-price">Rp ${formatRupiah(product.price)}</div>
-                <button class="btn-buy" onclick="openOrderModal(${product.id})" ${!currentUser ? 'disabled' : ''}>
-                    ${currentUser ? 'Beli Sekarang' : 'Login untuk Membeli'}
-                </button>
-            </div>
-        `;
-    }).join('');
-}
-
-function filterProducts(game) {
-    const productGrid = document.getElementById('productGrid');
-    
-    let filteredProducts = products.filter(p => p.status === 'active');
-    if (game !== 'all') {
-        filteredProducts = filteredProducts.filter(p => p.game === game);
-    }
-    
-    const gameNames = {
-        'ml': 'Mobile Legends',
-        'ff': 'Free Fire',
-        'pubg': 'PUBG Mobile',
-        'cod': 'COD Mobile'
-    };
-    
-    productGrid.innerHTML = filteredProducts.map(product => `
-        <div class="product-card">
-            <div class="product-badge">${gameNames[product.game]}</div>
-            <div class="product-name">${product.name}</div>
-            <div class="product-price">Rp ${formatRupiah(product.price)}</div>
-            <button class="btn-buy" onclick="openOrderModal(${product.id})" ${!currentUser ? 'disabled' : ''}>
-                ${currentUser ? 'Beli Sekarang' : 'Login untuk Membeli'}
-            </button>
-        </div>
-    `).join('');
-}
-
 // ============= AUTHENTICATION =============
 function checkAuthStatus() {
     const user = localStorage.getItem('currentUser');
@@ -594,17 +556,25 @@ function checkAuthStatus() {
 }
 
 function updateUIForLoggedInUser() {
-    document.getElementById('loginBtn').classList.add('hidden');
-    document.getElementById('registerBtn').classList.add('hidden');
-    document.getElementById('userProfile').classList.remove('hidden');
-    document.getElementById('usernameDisplay').textContent = currentUser.name.split(' ')[0];
+    const loginBtn = document.getElementById('loginBtn');
+    const registerBtn = document.getElementById('registerBtn');
+    const userProfile = document.getElementById('userProfile');
+    const usernameDisplay = document.getElementById('usernameDisplay');
+    const adminMenu = document.getElementById('adminMenu');
     
-    if (currentUser.role === 'admin') {
-        document.getElementById('adminMenu').classList.remove('hidden');
+    if (loginBtn) loginBtn.classList.add('hidden');
+    if (registerBtn) registerBtn.classList.add('hidden');
+    if (userProfile) userProfile.classList.remove('hidden');
+    if (usernameDisplay) usernameDisplay.textContent = currentUser.name.split(' ')[0];
+    
+    if (currentUser.role === 'admin' && adminMenu) {
+        adminMenu.classList.remove('hidden');
     }
     
     const avatar = document.querySelector('#userProfile img');
-    avatar.src = `https://ui-avatars.com/api/?name=${currentUser.name.replace(' ', '+')}&background=3b82f6&color=fff`;
+    if (avatar) {
+        avatar.src = `https://ui-avatars.com/api/?name=${currentUser.name.replace(' ', '+')}&background=3b82f6&color=fff`;
+    }
     
     // Enable buy buttons
     document.querySelectorAll('.btn-buy').forEach(btn => {
@@ -644,7 +614,7 @@ function handleLogin(event) {
         closeModal('loginModal');
         updateUIForLoggedInUser();
         
-        document.getElementById('loginForm').reset();
+        document.getElementById('loginForm')?.reset();
         
         if (user.role === 'admin') {
             setTimeout(() => {
@@ -692,7 +662,6 @@ function handleRegister(event) {
         password: password,
         role: 'user',
         vouchers: [],
-        voucherHistory: [],
         createdAt: new Date().toISOString()
     };
     
@@ -708,7 +677,7 @@ function handleRegister(event) {
     
     localStorage.setItem('currentUser', JSON.stringify(currentUser));
     
-    appStats.totalUsers++;
+    appStats.totalUsers = users.length;
     localStorage.setItem('appStats', JSON.stringify(appStats));
     updateLiveStats();
     
@@ -716,7 +685,7 @@ function handleRegister(event) {
     closeModal('registerModal');
     updateUIForLoggedInUser();
     
-    document.getElementById('registerForm').reset();
+    document.getElementById('registerForm')?.reset();
 }
 
 // ============= LOGOUT =============
@@ -725,11 +694,17 @@ function logout() {
     currentUser = null;
     appliedVoucher = null;
     
-    document.getElementById('loginBtn').classList.remove('hidden');
-    document.getElementById('registerBtn').classList.remove('hidden');
-    document.getElementById('userProfile').classList.add('hidden');
-    document.getElementById('adminMenu').classList.add('hidden');
-    document.getElementById('userMenu').classList.add('hidden');
+    const loginBtn = document.getElementById('loginBtn');
+    const registerBtn = document.getElementById('registerBtn');
+    const userProfile = document.getElementById('userProfile');
+    const adminMenu = document.getElementById('adminMenu');
+    const userMenu = document.getElementById('userMenu');
+    
+    if (loginBtn) loginBtn.classList.remove('hidden');
+    if (registerBtn) registerBtn.classList.remove('hidden');
+    if (userProfile) userProfile.classList.add('hidden');
+    if (adminMenu) adminMenu.classList.add('hidden');
+    if (userMenu) userMenu.classList.add('hidden');
     
     showToast('success', 'Berhasil logout!');
     
@@ -755,22 +730,35 @@ function openOrderModal(productId) {
         'cod': 'COD Mobile'
     };
     
-    document.getElementById('orderProductDetail').innerHTML = `
-        <h4>${gameNames[selectedProduct.game]}</h4>
-        <p>${selectedProduct.name}</p>
-        <p class="product-price">Rp ${formatRupiah(selectedProduct.price)}</p>
-    `;
+    const orderProductDetail = document.getElementById('orderProductDetail');
+    if (orderProductDetail) {
+        orderProductDetail.innerHTML = `
+            <h4>${gameNames[selectedProduct.game]}</h4>
+            <p>${selectedProduct.name}</p>
+            <p class="product-price">Rp ${formatRupiah(selectedProduct.price)}</p>
+        `;
+    }
     
-    document.getElementById('productPrice').textContent = `Rp ${formatRupiah(selectedProduct.price)}`;
+    const productPrice = document.getElementById('productPrice');
+    const totalPayment = document.getElementById('totalPayment');
+    const paymentTotal = document.getElementById('paymentTotal');
+    
+    if (productPrice) productPrice.textContent = `Rp ${formatRupiah(selectedProduct.price)}`;
+    
     const total = selectedProduct.price + 1000;
-    document.getElementById('totalPayment').textContent = `Rp ${formatRupiah(total)}`;
-    document.getElementById('paymentTotal').textContent = `Rp ${formatRupiah(total)}`;
+    if (totalPayment) totalPayment.textContent = `Rp ${formatRupiah(total)}`;
+    if (paymentTotal) paymentTotal.textContent = `Rp ${formatRupiah(total)}`;
     
     // Reset voucher
     appliedVoucher = null;
-    document.getElementById('voucherInfoBox').classList.add('hidden');
-    document.getElementById('discountRow').classList.add('hidden');
-    document.getElementById('promoMessage').innerHTML = '';
+    
+    const voucherInfoBox = document.getElementById('voucherInfoBox');
+    const discountRow = document.getElementById('discountRow');
+    const promoMessage = document.getElementById('promoMessage');
+    
+    if (voucherInfoBox) voucherInfoBox.classList.add('hidden');
+    if (discountRow) discountRow.classList.add('hidden');
+    if (promoMessage) promoMessage.innerHTML = '';
     
     openModal('orderModal');
 }
@@ -780,37 +768,43 @@ function selectPayment(method) {
     const qrisDisplay = document.getElementById('qrisDisplay');
     const uploadProof = document.getElementById('uploadProof');
     
-    instructions.classList.add('hidden');
-    qrisDisplay.classList.add('hidden');
-    uploadProof.classList.add('hidden');
+    if (instructions) instructions.classList.add('hidden');
+    if (qrisDisplay) qrisDisplay.classList.add('hidden');
+    if (uploadProof) uploadProof.classList.add('hidden');
     
     if (method === 'qris') {
-        qrisDisplay.classList.remove('hidden');
-        uploadProof.classList.remove('hidden');
+        if (qrisDisplay) qrisDisplay.classList.remove('hidden');
+        if (uploadProof) uploadProof.classList.remove('hidden');
     } else {
-        instructions.classList.remove('hidden');
-        uploadProof.classList.remove('hidden');
-        document.getElementById('instructionBox').innerHTML = `
-            <h4><i class="fas fa-info-circle"></i> Instruksi Pembayaran</h4>
-            <div class="bank-detail">
-                <p>Transfer ke:</p>
-                <h3>0822 1075 6431</h3>
-                <p>a.n <strong>Benoy</strong></p>
-                <p>Via <strong>${method.toUpperCase()}</strong></p>
-            </div>
-            <div class="total-payment">
-                <span>Total yang harus dibayar:</span>
-                <strong>${document.getElementById('totalPayment').textContent}</strong>
-            </div>
-        `;
+        if (instructions) instructions.classList.remove('hidden');
+        if (uploadProof) uploadProof.classList.remove('hidden');
+        
+        const instructionBox = document.getElementById('instructionBox');
+        const totalPayment = document.getElementById('totalPayment');
+        
+        if (instructionBox) {
+            instructionBox.innerHTML = `
+                <h4><i class="fas fa-info-circle"></i> Instruksi Pembayaran</h4>
+                <div class="bank-detail">
+                    <p>Transfer ke:</p>
+                    <h3>0822 1075 6431</h3>
+                    <p>a.n <strong>Benoy</strong></p>
+                    <p>Via <strong>${method.toUpperCase()}</strong></p>
+                </div>
+                <div class="total-payment">
+                    <span>Total yang harus dibayar:</span>
+                    <strong>${totalPayment ? totalPayment.textContent : 'Rp 0'}</strong>
+                </div>
+            `;
+        }
     }
 }
 
 function submitOrder() {
-    const gameId = document.getElementById('gameId').value.trim();
-    const zoneId = document.getElementById('zoneId').value.trim();
+    const gameId = document.getElementById('gameId')?.value.trim();
+    const zoneId = document.getElementById('zoneId')?.value.trim();
     const paymentMethod = document.querySelector('input[name="payment"]:checked')?.value;
-    const paymentProof = document.getElementById('paymentProof').files[0];
+    const paymentProof = document.getElementById('paymentProof')?.files[0];
     
     if (!gameId) {
         showToast('error', 'Masukkan User ID!');
@@ -864,7 +858,7 @@ function submitOrder() {
             markVoucherAsUsed();
         }
         
-        appStats.totalTransactions++;
+        appStats.totalTransactions = transactions.length;
         appStats.totalDiamonds += selectedProduct.diamond;
         appStats.totalRevenue += transaction.total;
         localStorage.setItem('appStats', JSON.stringify(appStats));
@@ -874,15 +868,27 @@ function submitOrder() {
         closeModal('orderModal');
         
         // Reset form
-        document.getElementById('gameId').value = '';
-        document.getElementById('zoneId').value = '';
-        document.getElementById('fileName').textContent = '';
+        const gameIdInput = document.getElementById('gameId');
+        const zoneIdInput = document.getElementById('zoneId');
+        const fileName = document.getElementById('fileName');
+        
+        if (gameIdInput) gameIdInput.value = '';
+        if (zoneIdInput) zoneIdInput.value = '';
+        if (fileName) fileName.textContent = '';
+        
         document.querySelectorAll('input[name="payment"]').forEach(r => r.checked = false);
-        document.getElementById('paymentInstructions').classList.add('hidden');
-        document.getElementById('qrisDisplay').classList.add('hidden');
-        document.getElementById('uploadProof').classList.add('hidden');
-        document.getElementById('promoMessage').innerHTML = '';
-        document.getElementById('voucherInfoBox').classList.add('hidden');
+        
+        const paymentInstructions = document.getElementById('paymentInstructions');
+        const qrisDisplay = document.getElementById('qrisDisplay');
+        const uploadProof = document.getElementById('uploadProof');
+        const promoMessage = document.getElementById('promoMessage');
+        const voucherInfoBox = document.getElementById('voucherInfoBox');
+        
+        if (paymentInstructions) paymentInstructions.classList.add('hidden');
+        if (qrisDisplay) qrisDisplay.classList.add('hidden');
+        if (uploadProof) uploadProof.classList.add('hidden');
+        if (promoMessage) promoMessage.innerHTML = '';
+        if (voucherInfoBox) voucherInfoBox.classList.add('hidden');
         
         appliedVoucher = null;
         
@@ -895,15 +901,17 @@ function submitOrder() {
 
 // ============= PROMO FUNCTIONS =============
 function applyPromo() {
-    const code = document.getElementById('promoCode').value.toUpperCase().trim();
+    const code = document.getElementById('promoCode')?.value.toUpperCase().trim();
     const promoMessage = document.getElementById('promoMessage');
     
     if (!code) {
-        promoMessage.innerHTML = `
-            <div class="promo-message error">
-                <i class="fas fa-times-circle"></i> Masukkan kode promo!
-            </div>
-        `;
+        if (promoMessage) {
+            promoMessage.innerHTML = `
+                <div class="promo-message error">
+                    <i class="fas fa-times-circle"></i> Masukkan kode promo!
+                </div>
+            `;
+        }
         return;
     }
     
@@ -924,17 +932,21 @@ function applyPromo() {
     
     if (promo) {
         showToast('success', `Promo ${code} berhasil! Diskon ${promo.discount}%`);
-        promoMessage.innerHTML = `
-            <div class="promo-message success">
-                <i class="fas fa-check-circle"></i> Promo berhasil! Diskon ${promo.discount}%
-            </div>
-        `;
+        if (promoMessage) {
+            promoMessage.innerHTML = `
+                <div class="promo-message success">
+                    <i class="fas fa-check-circle"></i> Promo berhasil! Diskon ${promo.discount}%
+                </div>
+            `;
+        }
     } else {
-        promoMessage.innerHTML = `
-            <div class="promo-message error">
-                <i class="fas fa-times-circle"></i> Kode tidak valid!
-            </div>
-        `;
+        if (promoMessage) {
+            promoMessage.innerHTML = `
+                <div class="promo-message error">
+                    <i class="fas fa-times-circle"></i> Kode tidak valid!
+                </div>
+            `;
+        }
     }
 }
 
@@ -955,9 +967,13 @@ function getGameName(gameCode) {
 }
 
 function updateLiveStats() {
-    document.getElementById('totalUsers').textContent = appStats.totalUsers.toLocaleString();
-    document.getElementById('totalTransactions').textContent = appStats.totalTransactions.toLocaleString();
-    document.getElementById('totalVouchers').textContent = appStats.totalVouchers.toLocaleString();
+    const totalUsers = document.getElementById('totalUsers');
+    const totalTransactions = document.getElementById('totalTransactions');
+    const totalVouchers = document.getElementById('totalVouchers');
+    
+    if (totalUsers) totalUsers.textContent = appStats.totalUsers.toLocaleString();
+    if (totalTransactions) totalTransactions.textContent = appStats.totalTransactions.toLocaleString();
+    if (totalVouchers) totalVouchers.textContent = appStats.totalVouchers.toLocaleString();
 }
 
 function updateNotificationBadge() {
@@ -977,6 +993,8 @@ function updateNotificationBadge() {
 
 function showToast(type, message) {
     const container = document.getElementById('toastContainer');
+    if (!container) return;
+    
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
     
@@ -1001,25 +1019,29 @@ function showToast(type, message) {
 
 function updateFileName(input) {
     const fileName = document.getElementById('fileName');
-    if (input.files && input.files[0]) {
+    if (fileName && input.files && input.files[0]) {
         fileName.textContent = input.files[0].name;
     }
 }
 
 function toggleUserMenu() {
-    document.getElementById('userMenu').classList.toggle('hidden');
+    const menu = document.getElementById('userMenu');
+    if (menu) menu.classList.toggle('hidden');
 }
 
 function toggleMenu() {
-    document.getElementById('navMenu').classList.toggle('show');
+    const menu = document.getElementById('navMenu');
+    if (menu) menu.classList.toggle('show');
 }
 
 function openModal(modalId) {
-    document.getElementById(modalId).classList.add('show');
+    const modal = document.getElementById(modalId);
+    if (modal) modal.classList.add('show');
 }
 
 function closeModal(modalId) {
-    document.getElementById(modalId).classList.remove('show');
+    const modal = document.getElementById(modalId);
+    if (modal) modal.classList.remove('show');
 }
 
 function switchModal(type) {
@@ -1028,7 +1050,7 @@ function switchModal(type) {
 }
 
 function scrollToProducts() {
-    document.getElementById('products').scrollIntoView({ behavior: 'smooth' });
+    document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' });
 }
 
 // ============= USER MENU FUNCTIONS =============
@@ -1042,7 +1064,7 @@ function showNotifications() {
     } else {
         showToast('info', 'Tidak ada notifikasi');
     }
-    document.getElementById('userMenu').classList.add('hidden');
+    document.getElementById('userMenu')?.classList.add('hidden');
 }
 
 function showUserProfile() {
@@ -1065,11 +1087,13 @@ function showUserProfile() {
     message += `Voucher Aktif: ${voucherCount}`;
     
     showToast('info', message);
-    document.getElementById('userMenu').classList.add('hidden');
+    document.getElementById('userMenu')?.classList.add('hidden');
 }
 
 function showOrderHistory() {
-    const userTransactions = transactions.filter(t => t.userId === currentUser?.id);
+    if (!currentUser) return;
+    
+    const userTransactions = transactions.filter(t => t.userId === currentUser.id);
     
     if (userTransactions.length === 0) {
         showToast('info', 'Belum ada riwayat transaksi');
@@ -1084,7 +1108,7 @@ function showOrderHistory() {
         });
         showToast('info', message);
     }
-    document.getElementById('userMenu').classList.add('hidden');
+    document.getElementById('userMenu')?.classList.add('hidden');
 }
 
 // ============= ADMIN FUNCTIONS =============
@@ -1096,7 +1120,7 @@ function openAdminDashboard() {
     
     loadAdminData();
     openModal('adminDashboardModal');
-    document.getElementById('userMenu').classList.add('hidden');
+    document.getElementById('userMenu')?.classList.add('hidden');
 }
 
 function loadAdminData() {
@@ -1107,12 +1131,18 @@ function loadAdminData() {
     loadAdminVouchers();
     updateNotificationBadge();
     
-    if (document.getElementById('dashboardUsers')) {
-        document.getElementById('dashboardUsers').textContent = appStats.totalUsers.toLocaleString();
-        document.getElementById('dashboardTransactions').textContent = appStats.totalTransactions.toLocaleString();
-        document.getElementById('dashboardDiamonds').textContent = appStats.totalDiamonds.toLocaleString();
-        document.getElementById('dashboardVouchers').textContent = appStats.totalVouchers.toLocaleString();
-    }
+    // Update dashboard stats
+    const dashboardUsers = document.getElementById('dashboardUsers');
+    const dashboardTransactions = document.getElementById('dashboardTransactions');
+    const dashboardDiamonds = document.getElementById('dashboardDiamonds');
+    const dashboardVouchers = document.getElementById('dashboardVouchers');
+    const dashboardRevenue = document.getElementById('dashboardRevenue');
+    
+    if (dashboardUsers) dashboardUsers.textContent = appStats.totalUsers.toLocaleString();
+    if (dashboardTransactions) dashboardTransactions.textContent = appStats.totalTransactions.toLocaleString();
+    if (dashboardDiamonds) dashboardDiamonds.textContent = appStats.totalDiamonds.toLocaleString();
+    if (dashboardVouchers) dashboardVouchers.textContent = appStats.totalVouchers.toLocaleString();
+    if (dashboardRevenue) dashboardRevenue.textContent = `Rp ${formatRupiah(appStats.totalRevenue)}`;
 }
 
 function loadTransactions() {
@@ -1126,12 +1156,12 @@ function loadTransactions() {
     list.innerHTML = sorted.map(t => `
         <div class="transaction-item">
             <div class="transaction-info">
-                <div><strong>${t.userName}</strong> - ${t.product?.name || 'Unknown'}</div>
+                <div><strong>${t.userName || 'Unknown'}</strong> - ${t.product?.name || 'Unknown'}</div>
                 <div class="transaction-meta">ID: ${t.gameId} | ${new Date(t.createdAt).toLocaleString('id-ID')}</div>
-                ${t.voucherUsed ? `<div class="transaction-meta">Voucher: ${t.voucherUsed} (Diskon Rp ${formatRupiah(t.discount)})</div>` : ''}
+                ${t.voucherUsed ? `<div class="transaction-meta">Voucher: ${t.voucherUsed} (Diskon Rp ${formatRupiah(t.discount || 0)})</div>` : ''}
             </div>
-            <div class="transaction-amount">Rp ${formatRupiah(t.total)}</div>
-            <div class="transaction-status status-${t.status}">${t.status}</div>
+            <div class="transaction-amount">Rp ${formatRupiah(t.total || 0)}</div>
+            <div class="transaction-status status-${t.status || 'pending'}">${t.status || 'pending'}</div>
             <div class="transaction-actions">
                 <button class="btn-view" onclick="viewTransaction('${t.id}')">Detail</button>
                 ${t.paymentProof ? `<button class="btn-view" onclick="viewPaymentProof('${t.id}')">Bukti</button>` : ''}
@@ -1143,11 +1173,11 @@ function loadTransactions() {
         recentList.innerHTML = sorted.slice(0, 5).map(t => `
             <div class="transaction-item">
                 <div class="transaction-info">
-                    <div><strong>${t.userName}</strong> - ${t.product?.name || 'Unknown'}</div>
+                    <div><strong>${t.userName || 'Unknown'}</strong> - ${t.product?.name || 'Unknown'}</div>
                     <div class="transaction-meta">${new Date(t.createdAt).toLocaleString('id-ID')}</div>
                 </div>
-                <div class="transaction-amount">Rp ${formatRupiah(t.total)}</div>
-                <div class="transaction-status status-${t.status}">${t.status}</div>
+                <div class="transaction-amount">Rp ${formatRupiah(t.total || 0)}</div>
+                <div class="transaction-status status-${t.status || 'pending'}">${t.status || 'pending'}</div>
             </div>
         `).join('');
     }
@@ -1171,7 +1201,7 @@ function loadAdminProducts() {
             <td>${p.name}</td>
             <td>${p.diamond}</td>
             <td>Rp ${formatRupiah(p.price)}</td>
-            <td><span class="status-${p.status}">${p.status}</span></td>
+            <td><span class="status-${p.status || 'active'}">${p.status || 'active'}</span></td>
             <td>
                 <button class="btn-edit" onclick="editProduct(${p.id})">Edit</button>
                 <button class="btn-delete" onclick="deleteProduct(${p.id})">Hapus</button>
@@ -1185,7 +1215,7 @@ function loadAdminVouchers() {
     if (!list) return;
     
     list.innerHTML = vouchers.map(v => {
-        const claimedCount = v.claimedBy.length;
+        const claimedCount = v.claimedBy?.length || 0;
         const remaining = v.maxClaims - claimedCount;
         const expiryDate = new Date(v.expiresAt);
         const status = expiryDate < new Date() ? 'expired' : (v.active ? 'active' : 'inactive');
@@ -1249,7 +1279,7 @@ function loadPayments() {
     
     grid.innerHTML = pendingTransactions.map(t => `
         <div class="payment-card" onclick="viewPaymentProof('${t.id}')">
-            <img src="${t.paymentProof}" alt="Bukti Pembayaran">
+            <img src="${t.paymentProof}" alt="Bukti Pembayaran" style="width:100%; height:150px; object-fit:cover; border-radius:4px;">
             <div style="padding:10px;">
                 <div><strong>${t.userName}</strong></div>
                 <div>Rp ${formatRupiah(t.total)}</div>
@@ -1261,14 +1291,23 @@ function loadPayments() {
 
 // ============= ADMIN CRUD FUNCTIONS =============
 function showAddProductModal() {
-    document.getElementById('productModalTitle').textContent = 'Tambah Produk';
-    document.getElementById('productId').value = '';
-    document.getElementById('productGame').value = 'ml';
-    document.getElementById('productName').value = '';
-    document.getElementById('productDiamond').value = '';
-    document.getElementById('productPrice').value = '';
-    document.getElementById('productBonus').value = '';
-    document.getElementById('productStatus').value = 'active';
+    const modalTitle = document.getElementById('productModalTitle');
+    const productId = document.getElementById('productId');
+    const productGame = document.getElementById('productGame');
+    const productName = document.getElementById('productName');
+    const productDiamond = document.getElementById('productDiamond');
+    const productPrice = document.getElementById('productPrice');
+    const productBonus = document.getElementById('productBonus');
+    const productStatus = document.getElementById('productStatus');
+    
+    if (modalTitle) modalTitle.textContent = 'Tambah Produk';
+    if (productId) productId.value = '';
+    if (productGame) productGame.value = 'ml';
+    if (productName) productName.value = '';
+    if (productDiamond) productDiamond.value = '';
+    if (productPrice) productPrice.value = '';
+    if (productBonus) productBonus.value = '';
+    if (productStatus) productStatus.value = 'active';
     
     openModal('productModal');
 }
@@ -1277,14 +1316,23 @@ function editProduct(id) {
     const product = products.find(p => p.id === id);
     if (!product) return;
     
-    document.getElementById('productModalTitle').textContent = 'Edit Produk';
-    document.getElementById('productId').value = product.id;
-    document.getElementById('productGame').value = product.game;
-    document.getElementById('productName').value = product.name;
-    document.getElementById('productDiamond').value = product.diamond;
-    document.getElementById('productPrice').value = product.price;
-    document.getElementById('productBonus').value = product.bonus || '';
-    document.getElementById('productStatus').value = product.status;
+    const modalTitle = document.getElementById('productModalTitle');
+    const productId = document.getElementById('productId');
+    const productGame = document.getElementById('productGame');
+    const productName = document.getElementById('productName');
+    const productDiamond = document.getElementById('productDiamond');
+    const productPrice = document.getElementById('productPrice');
+    const productBonus = document.getElementById('productBonus');
+    const productStatus = document.getElementById('productStatus');
+    
+    if (modalTitle) modalTitle.textContent = 'Edit Produk';
+    if (productId) productId.value = product.id;
+    if (productGame) productGame.value = product.game;
+    if (productName) productName.value = product.name;
+    if (productDiamond) productDiamond.value = product.diamond;
+    if (productPrice) productPrice.value = product.price;
+    if (productBonus) productBonus.value = product.bonus || '';
+    if (productStatus) productStatus.value = product.status;
     
     openModal('productModal');
 }
@@ -1292,19 +1340,26 @@ function editProduct(id) {
 function saveProduct(event) {
     event.preventDefault();
     
-    const id = document.getElementById('productId').value;
+    const productId = document.getElementById('productId')?.value;
+    const productGame = document.getElementById('productGame')?.value;
+    const productName = document.getElementById('productName')?.value;
+    const productDiamond = document.getElementById('productDiamond')?.value;
+    const productPrice = document.getElementById('productPrice')?.value;
+    const productBonus = document.getElementById('productBonus')?.value;
+    const productStatus = document.getElementById('productStatus')?.value;
+    
     const product = {
-        id: id ? parseInt(id) : products.length + 1,
-        game: document.getElementById('productGame').value,
-        name: document.getElementById('productName').value,
-        diamond: parseInt(document.getElementById('productDiamond').value),
-        price: parseInt(document.getElementById('productPrice').value),
-        bonus: document.getElementById('productBonus').value,
-        status: document.getElementById('productStatus').value
+        id: productId ? parseInt(productId) : products.length + 1,
+        game: productGame,
+        name: productName,
+        diamond: parseInt(productDiamond),
+        price: parseInt(productPrice),
+        bonus: productBonus || '',
+        status: productStatus
     };
     
-    if (id) {
-        const index = products.findIndex(p => p.id === parseInt(id));
+    if (productId) {
+        const index = products.findIndex(p => p.id === parseInt(productId));
         if (index !== -1) products[index] = product;
     } else {
         products.push(product);
@@ -1330,20 +1385,32 @@ function deleteProduct(id) {
 }
 
 function showAddVoucherModal() {
-    document.getElementById('voucherModalTitle').textContent = 'Tambah Voucher';
-    document.getElementById('voucherId').value = '';
-    document.getElementById('voucherCode').value = '';
-    document.getElementById('voucherName').value = '';
-    document.getElementById('voucherDescription').value = '';
-    document.getElementById('voucherDiscount').value = '';
-    document.getElementById('voucherMinPurchase').value = '20000';
-    document.getElementById('voucherType').value = 'discount';
-    document.getElementById('voucherForGame').value = 'all';
-    document.getElementById('voucherMaxClaims').value = '100';
+    const modalTitle = document.getElementById('voucherModalTitle');
+    const voucherId = document.getElementById('voucherId');
+    const voucherCode = document.getElementById('voucherCode');
+    const voucherName = document.getElementById('voucherName');
+    const voucherDescription = document.getElementById('voucherDescription');
+    const voucherDiscount = document.getElementById('voucherDiscount');
+    const voucherMinPurchase = document.getElementById('voucherMinPurchase');
+    const voucherType = document.getElementById('voucherType');
+    const voucherForGame = document.getElementById('voucherForGame');
+    const voucherMaxClaims = document.getElementById('voucherMaxClaims');
+    const voucherExpiry = document.getElementById('voucherExpiry');
+    
+    if (modalTitle) modalTitle.textContent = 'Tambah Voucher';
+    if (voucherId) voucherId.value = '';
+    if (voucherCode) voucherCode.value = '';
+    if (voucherName) voucherName.value = '';
+    if (voucherDescription) voucherDescription.value = '';
+    if (voucherDiscount) voucherDiscount.value = '';
+    if (voucherMinPurchase) voucherMinPurchase.value = '20000';
+    if (voucherType) voucherType.value = 'discount';
+    if (voucherForGame) voucherForGame.value = 'all';
+    if (voucherMaxClaims) voucherMaxClaims.value = '100';
     
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 30);
-    document.getElementById('voucherExpiry').value = tomorrow.toISOString().split('T')[0];
+    if (voucherExpiry) voucherExpiry.value = tomorrow.toISOString().split('T')[0];
     
     openModal('voucherModal');
 }
@@ -1352,17 +1419,29 @@ function editVoucher(id) {
     const voucher = vouchers.find(v => v.id === id);
     if (!voucher) return;
     
-    document.getElementById('voucherModalTitle').textContent = 'Edit Voucher';
-    document.getElementById('voucherId').value = voucher.id;
-    document.getElementById('voucherCode').value = voucher.code;
-    document.getElementById('voucherName').value = voucher.name;
-    document.getElementById('voucherDescription').value = voucher.description;
-    document.getElementById('voucherDiscount').value = voucher.discount;
-    document.getElementById('voucherMinPurchase').value = voucher.minPurchase;
-    document.getElementById('voucherType').value = voucher.type;
-    document.getElementById('voucherForGame').value = voucher.forGame;
-    document.getElementById('voucherMaxClaims').value = voucher.maxClaims;
-    document.getElementById('voucherExpiry').value = voucher.expiresAt;
+    const modalTitle = document.getElementById('voucherModalTitle');
+    const voucherId = document.getElementById('voucherId');
+    const voucherCode = document.getElementById('voucherCode');
+    const voucherName = document.getElementById('voucherName');
+    const voucherDescription = document.getElementById('voucherDescription');
+    const voucherDiscount = document.getElementById('voucherDiscount');
+    const voucherMinPurchase = document.getElementById('voucherMinPurchase');
+    const voucherType = document.getElementById('voucherType');
+    const voucherForGame = document.getElementById('voucherForGame');
+    const voucherMaxClaims = document.getElementById('voucherMaxClaims');
+    const voucherExpiry = document.getElementById('voucherExpiry');
+    
+    if (modalTitle) modalTitle.textContent = 'Edit Voucher';
+    if (voucherId) voucherId.value = voucher.id;
+    if (voucherCode) voucherCode.value = voucher.code;
+    if (voucherName) voucherName.value = voucher.name;
+    if (voucherDescription) voucherDescription.value = voucher.description || '';
+    if (voucherDiscount) voucherDiscount.value = voucher.discount;
+    if (voucherMinPurchase) voucherMinPurchase.value = voucher.minPurchase;
+    if (voucherType) voucherType.value = voucher.type;
+    if (voucherForGame) voucherForGame.value = voucher.forGame;
+    if (voucherMaxClaims) voucherMaxClaims.value = voucher.maxClaims;
+    if (voucherExpiry) voucherExpiry.value = voucher.expiresAt;
     
     openModal('voucherModal');
 }
@@ -1370,25 +1449,35 @@ function editVoucher(id) {
 function saveVoucher(event) {
     event.preventDefault();
     
-    const id = document.getElementById('voucherId').value;
+    const voucherId = document.getElementById('voucherId')?.value;
+    const voucherCode = document.getElementById('voucherCode')?.value;
+    const voucherName = document.getElementById('voucherName')?.value;
+    const voucherDescription = document.getElementById('voucherDescription')?.value;
+    const voucherDiscount = document.getElementById('voucherDiscount')?.value;
+    const voucherMinPurchase = document.getElementById('voucherMinPurchase')?.value;
+    const voucherType = document.getElementById('voucherType')?.value;
+    const voucherForGame = document.getElementById('voucherForGame')?.value;
+    const voucherMaxClaims = document.getElementById('voucherMaxClaims')?.value;
+    const voucherExpiry = document.getElementById('voucherExpiry')?.value;
+    
     const voucher = {
-        id: id || 'VCH' + Date.now(),
-        code: document.getElementById('voucherCode').value.toUpperCase(),
-        name: document.getElementById('voucherName').value,
-        description: document.getElementById('voucherDescription').value || document.getElementById('voucherName').value,
-        discount: parseInt(document.getElementById('voucherDiscount').value),
-        minPurchase: parseInt(document.getElementById('voucherMinPurchase').value),
-        type: document.getElementById('voucherType').value,
-        forGame: document.getElementById('voucherForGame').value,
-        maxClaims: parseInt(document.getElementById('voucherMaxClaims').value),
-        expiresAt: document.getElementById('voucherExpiry').value,
-        claimedBy: id ? (vouchers.find(v => v.id === id)?.claimedBy || []) : [],
+        id: voucherId || 'VCH' + Date.now(),
+        code: voucherCode.toUpperCase(),
+        name: voucherName,
+        description: voucherDescription || voucherName,
+        discount: parseInt(voucherDiscount),
+        minPurchase: parseInt(voucherMinPurchase),
+        type: voucherType,
+        forGame: voucherForGame,
+        maxClaims: parseInt(voucherMaxClaims),
+        expiresAt: voucherExpiry,
+        claimedBy: voucherId ? (vouchers.find(v => v.id === voucherId)?.claimedBy || []) : [],
         active: true,
-        createdAt: id ? (vouchers.find(v => v.id === id)?.createdAt || new Date().toISOString()) : new Date().toISOString()
+        createdAt: voucherId ? (vouchers.find(v => v.id === voucherId)?.createdAt || new Date().toISOString()) : new Date().toISOString()
     };
     
-    if (id) {
-        const index = vouchers.findIndex(v => v.id === id);
+    if (voucherId) {
+        const index = vouchers.findIndex(v => v.id === voucherId);
         if (index !== -1) vouchers[index] = {...vouchers[index], ...voucher};
     } else {
         vouchers.push(voucher);
@@ -1419,6 +1508,9 @@ function deleteUser(id) {
     users = users.filter(u => u.id !== id);
     localStorage.setItem('users', JSON.stringify(users));
     
+    appStats.totalUsers = users.length;
+    localStorage.setItem('appStats', JSON.stringify(appStats));
+    
     loadUsers();
     showToast('success', 'User berhasil dihapus!');
 }
@@ -1428,6 +1520,8 @@ function viewTransaction(id) {
     if (!transaction) return;
     
     const detail = document.getElementById('transactionDetail');
+    if (!detail) return;
+    
     detail.innerHTML = `
         <div style="padding: 20px;">
             <p><strong>ID Transaksi:</strong> ${transaction.id}</p>
@@ -1452,17 +1546,22 @@ function viewPaymentProof(id) {
     const transaction = transactions.find(t => t.id === id);
     if (!transaction || !transaction.paymentProof) return;
     
-    document.getElementById('proofImage').src = transaction.paymentProof;
-    document.getElementById('proofImage').dataset.id = id;
+    const proofImage = document.getElementById('proofImage');
+    if (proofImage) {
+        proofImage.src = transaction.paymentProof;
+        proofImage.dataset.id = id;
+    }
     
     openModal('paymentProofModal');
 }
 
 function updateTransactionStatus(status) {
-    const img = document.getElementById('proofImage');
-    const id = img.dataset.id;
+    const proofImage = document.getElementById('proofImage');
+    if (!proofImage) return;
     
+    const id = proofImage.dataset.id;
     const transaction = transactions.find(t => t.id === id);
+    
     if (transaction) {
         transaction.status = status;
         localStorage.setItem('transactions', JSON.stringify(transactions));
@@ -1498,7 +1597,7 @@ function filterAdminProducts() {
             <td>${p.name}</td>
             <td>${p.diamond}</td>
             <td>Rp ${formatRupiah(p.price)}</td>
-            <td><span class="status-${p.status}">${p.status}</span></td>
+            <td><span class="status-${p.status || 'active'}">${p.status || 'active'}</span></td>
             <td>
                 <button class="btn-edit" onclick="editProduct(${p.id})">Edit</button>
                 <button class="btn-delete" onclick="deleteProduct(${p.id})">Hapus</button>
@@ -1525,11 +1624,11 @@ function filterTransactions() {
     list.innerHTML = filtered.map(t => `
         <div class="transaction-item">
             <div class="transaction-info">
-                <div><strong>${t.userName}</strong> - ${t.product?.name || 'Unknown'}</div>
+                <div><strong>${t.userName || 'Unknown'}</strong> - ${t.product?.name || 'Unknown'}</div>
                 <div class="transaction-meta">ID: ${t.gameId} | ${new Date(t.createdAt).toLocaleString('id-ID')}</div>
             </div>
-            <div class="transaction-amount">Rp ${formatRupiah(t.total)}</div>
-            <div class="transaction-status status-${t.status}">${t.status}</div>
+            <div class="transaction-amount">Rp ${formatRupiah(t.total || 0)}</div>
+            <div class="transaction-status status-${t.status || 'pending'}">${t.status || 'pending'}</div>
             <div class="transaction-actions">
                 <button class="btn-view" onclick="viewTransaction('${t.id}')">Detail</button>
                 ${t.paymentProof ? `<button class="btn-view" onclick="viewPaymentProof('${t.id}')">Bukti</button>` : ''}
@@ -1591,7 +1690,7 @@ function filterPayments() {
     
     grid.innerHTML = filtered.map(t => `
         <div class="payment-card" onclick="viewPaymentProof('${t.id}')">
-            <img src="${t.paymentProof}" alt="Bukti Pembayaran">
+            <img src="${t.paymentProof}" alt="Bukti Pembayaran" style="width:100%; height:150px; object-fit:cover; border-radius:4px;">
             <div style="padding:10px;">
                 <div><strong>${t.userName}</strong></div>
                 <div>Rp ${formatRupiah(t.total)}</div>
@@ -1602,12 +1701,18 @@ function filterPayments() {
 }
 
 function showAdminTab(tab) {
+    // Update sidebar
     document.querySelectorAll('.admin-menu a').forEach(a => a.classList.remove('active'));
-    event.target.closest('a').classList.add('active');
+    if (event && event.target) {
+        event.target.closest('a').classList.add('active');
+    }
     
+    // Show tab
     document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
-    document.getElementById(`tab-${tab}`).classList.add('active');
+    const selectedTab = document.getElementById(`tab-${tab}`);
+    if (selectedTab) selectedTab.classList.add('active');
     
+    // Load data if needed
     if (tab === 'transactions') loadTransactions();
     if (tab === 'payments') loadPayments();
     if (tab === 'products') loadAdminProducts();
@@ -1622,11 +1727,16 @@ function showAddPromoModal() {
 function savePromo(event) {
     event.preventDefault();
     
+    const promoCode = document.getElementById('promoCode')?.value;
+    const promoDiscount = document.getElementById('promoDiscount')?.value;
+    const promoMin = document.getElementById('promoMin')?.value;
+    const promoExpiry = document.getElementById('promoExpiry')?.value;
+    
     const promo = {
-        code: document.getElementById('promoCode').value.toUpperCase(),
-        discount: parseInt(document.getElementById('promoDiscount').value),
-        minPurchase: parseInt(document.getElementById('promoMin').value),
-        expiry: document.getElementById('promoExpiry').value
+        code: promoCode.toUpperCase(),
+        discount: parseInt(promoDiscount),
+        minPurchase: parseInt(promoMin),
+        expiry: promoExpiry
     };
     
     promos.push(promo);
@@ -1674,7 +1784,6 @@ function resetAdminData() {
             password: 'admin123', 
             role: 'admin',
             vouchers: [],
-            voucherHistory: [],
             createdAt: new Date().toISOString()
         },
         { 
@@ -1684,7 +1793,6 @@ function resetAdminData() {
             password: 'user123', 
             role: 'user',
             vouchers: [],
-            voucherHistory: [],
             createdAt: new Date().toISOString()
         }
     ];
@@ -1699,6 +1807,7 @@ function resetAdminData() {
 
 // ============= EVENT LISTENERS =============
 function setupEventListeners() {
+    // Filter buttons
     document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
@@ -1707,12 +1816,14 @@ function setupEventListeners() {
         });
     });
     
+    // Close modals when clicking outside
     window.addEventListener('click', function(event) {
         if (event.target.classList.contains('modal')) {
             event.target.classList.remove('show');
         }
     });
     
+    // Scroll spy
     window.addEventListener('scroll', function() {
         const navLinks = document.querySelectorAll('.nav-link');
         const sections = ['home', 'products', 'vouchers', 'how-it-works', 'promo', 'contact'];
@@ -1736,6 +1847,7 @@ function setupEventListeners() {
 }
 
 // ============= EXPORT FUNCTIONS =============
+// User functions
 window.openOrderModal = openOrderModal;
 window.handleLogin = handleLogin;
 window.handleRegister = handleRegister;
@@ -1753,12 +1865,15 @@ window.applyPromo = applyPromo;
 window.showNotifications = showNotifications;
 window.showUserProfile = showUserProfile;
 window.showOrderHistory = showOrderHistory;
-window.showVoucher = showUserVouchers;
+
+// Voucher functions
 window.showUserVouchers = showUserVouchers;
 window.showAvailableVouchers = showAvailableVouchers;
 window.claimVoucher = claimVoucher;
 window.applyVoucher = applyVoucher;
 window.removeVoucher = removeVoucher;
+
+// Admin functions
 window.openAdminDashboard = openAdminDashboard;
 window.showAdminTab = showAdminTab;
 window.showAddProductModal = showAddProductModal;
@@ -1780,6 +1895,8 @@ window.showAddPromoModal = showAddPromoModal;
 window.savePromo = savePromo;
 window.exportReport = exportReport;
 window.saveSettings = saveSettings;
+
+// Debug functions
 window.checkAdminData = checkAdminData;
 window.resetAdminData = resetAdminData;
 
@@ -1787,4 +1904,4 @@ window.resetAdminData = resetAdminData;
 setInterval(updateNotificationBadge, 5000);
 setInterval(updateUserVoucherCount, 10000);
 
-console.log('Script loaded successfully with VOUCHER features!');
+console.log('Script loaded successfully with FIXED admin panel!');
