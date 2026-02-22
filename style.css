@@ -143,6 +143,7 @@ body {
 .hero {
     padding: 100px 0 60px;
     background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    color: white;
 }
 
 .hero-container {
@@ -153,10 +154,6 @@ body {
     grid-template-columns: 1fr 1fr;
     gap: 40px;
     align-items: center;
-}
-
-.hero-content {
-    color: white;
 }
 
 .hero-content h1 {
@@ -176,6 +173,10 @@ body {
     display: flex;
     gap: 30px;
     margin-bottom: 30px;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 15px 20px;
+    border-radius: 50px;
+    display: inline-flex;
 }
 
 .stat-item {
@@ -188,26 +189,51 @@ body {
     font-size: 16px;
 }
 
+.stat-item span {
+    font-weight: 700;
+    font-size: 18px;
+}
+
 .hero-ewallets {
     display: flex;
     gap: 20px;
     margin-bottom: 30px;
 }
 
-.ewallet-logo {
-    height: 30px;
-    filter: brightness(0) invert(1);
+.ewallet-icon-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.15);
+    padding: 8px 16px;
+    border-radius: 50px;
+    backdrop-filter: blur(5px);
+}
+
+.ewallet-icon-wrapper i {
+    font-size: 18px;
+}
+
+.ewallet-icon-wrapper span {
+    font-weight: 600;
+    font-size: 14px;
 }
 
 .btn-order-now {
     padding: 12px 32px;
     background: white;
     border: none;
-    border-radius: 8px;
+    border-radius: 50px;
     color: #3b82f6;
     font-weight: 600;
     font-size: 16px;
     cursor: pointer;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.btn-order-now:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
 }
 
 .hero-image {
@@ -216,8 +242,32 @@ body {
 
 .hero-image img {
     max-width: 100%;
+    animation: float 3s ease-in-out infinite;
 }
 
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .hero-container {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+    
+    .hero-stats {
+        flex-direction: column;
+        gap: 15px;
+        border-radius: 20px;
+        width: 100%;
+    }
+    
+    .hero-ewallets {
+        justify-content: center;
+    }
+}
 /* Products Section */
 .products {
     padding: 60px 0;
