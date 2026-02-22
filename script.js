@@ -101,8 +101,8 @@ function loadData() {
         promos = JSON.parse(savedPromos);
     } else {
         promos = [
-            { code: 'WELCOME10', discount: 10, minPurchase: 20000, expiry: '2024-12-31' },
-            { code: 'DIAMOND20', discount: 20, minPurchase: 50000, expiry: '2024-12-31' }
+            { code: 'WELCOME10', discount: 10, minPurchase: 20000, expiry: '2040-12-31' },
+            { code: 'DIAMOND20', discount: 20, minPurchase: 50000, expiry: '2040-12-31' }
         ];
         localStorage.setItem('promos', JSON.stringify(promos));
     }
