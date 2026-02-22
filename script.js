@@ -1,297 +1,89 @@
-// Global variables
+// Global Variables
 let currentUser = null;
 let selectedProduct = null;
-let appliedPromo = null;
 let products = [];
-let usedPromoCodes = {};
+let transactions = [];
+let users = [];
+let promos = [];
 let appStats = {
-    totalUsers: 0,
-    totalTransactions: 0,
-    totalDiamonds: 0,
-    totalRevenue: 0,
-    recentActivities: [],
-    topSpenders: [],
-    dailyStats: {
-        users: 0,
-        transactions: 0,
-        diamonds: 0,
-        revenue: 0
-    }
+    totalUsers: 1247,
+    totalTransactions: 8923,
+    totalDiamonds: 456789,
+    totalRevenue: 189750000
 };
 
-// Initialize the application
+// Initialize
 document.addEventListener('DOMContentLoaded', function() {
+    loadData();
     loadProducts();
     setupEventListeners();
     checkAuthStatus();
-    loadUserData();
-    loadUsedPromoCodes();
-    loadAppStats();
     updateLiveStats();
-    startLiveUpdates();
-    loadRecentActivities();
-    loadTopSpenders();
-    loadTestimonials();
 });
 
-// Load app statistics from localStorage
-function loadAppStats() {
-    const savedStats = localStorage.getItem('appStats');
-    if (savedStats) {
-        appStats = JSON.parse(savedStats);
+// Load all data from localStorage
+function loadData() {
+    // Load products
+    const savedProducts = localStorage.getItem('products');
+    if (savedProducts) {
+        products = JSON.parse(savedProducts);
     } else {
-        // Initialize with sample data
-        appStats = {
-            totalUsers: 1247,
-            totalTransactions: 8923,
-            totalDiamonds: 456789,
-            totalRevenue: 189750000,
-            recentActivities: [],
-            topSpenders: [],
-            dailyStats: {
-                users: 12,
-                transactions: 45,
-                diamonds: 2500,
-                revenue: 5250000
-            }
-        };
-        saveAppStats();
+        // Default products
+        products = [
+            { id: 1, game: 'ml', name: '86 Diamonds', diamond: 86, price: 17000, bonus: '', status: 'active' },
+            { id: 2, game: 'ml', name: '172 Diamonds', diamond: 172, price: 33000, bonus: '', status: 'active' },
+            { id: 3, game: 'ml', name: '257 Diamonds', diamond: 257, price: 48000, bonus: '', status: 'active' },
+            { id: 4, game: 'ff', name: '70 Diamonds', diamond: 70, price: 12000, bonus: '', status: 'active' },
+            { id: 5, game: 'ff', name: '140 Diamonds', diamond: 140, price: 23000, bonus: '', status: 'active' },
+            { id: 6, game: 'pubg', name: '60 UC', diamond: 60, price: 17000, bonus: '', status: 'active' },
+            { id: 7, game: 'pubg', name: '180 UC', diamond: 180, price: 48000, bonus: '+25 Bonus', status: 'active' },
+            { id: 8, game: 'cod', name: '80 CP', diamond: 80, price: 19000, bonus: '', status: 'active' },
+            { id: 9, game: 'cod', name: '220 CP', diamond: 220, price: 50000, bonus: '+25 Bonus', status: 'active' }
+        ];
+        localStorage.setItem('products', JSON.stringify(products));
+    }
+    
+    // Load users
+    const savedUsers = localStorage.getItem('users');
+    if (savedUsers) {
+        users = JSON.parse(savedUsers);
+    } else {
+        users = [
+            { id: 1, name: 'Admin Benoy', email: 'admin@benoystore.com', password: 'admin123', role: 'admin' },
+            { id: 2, name: 'User Demo', email: 'user@demo.com', password: 'user123', role: 'user' }
+        ];
+        localStorage.setItem('users', JSON.stringify(users));
+    }
+    
+    // Load transactions
+    const savedTransactions = localStorage.getItem('transactions');
+    if (savedTransactions) {
+        transactions = JSON.parse(savedTransactions);
+    }
+    
+    // Load promos
+    const savedPromos = localStorage.getItem('promos');
+    if (savedPromos) {
+        promos = JSON.parse(savedPromos);
+    } else {
+        promos = [
+            { code: 'WELCOME10', discount: 10, minPurchase: 20000, expiry: '2024-12-31' },
+            { code: 'DIAMOND20', discount: 20, minPurchase: 50000, expiry: '2024-12-31' }
+        ];
+        localStorage.setItem('promos', JSON.stringify(promos));
     }
 }
 
-// Save app statistics to localStorage
-function saveAppStats() {
-    localStorage.setItem('appStats', JSON.stringify(appStats));
-}
-
-// Update live statistics on page
-function updateLiveStats() {
-    // Update hero stats
-    document.getElementById('totalUsers').textContent = appStats.totalUsers.toLocaleString();
-    document.getElementById('totalTransactions').textContent = appStats.totalTransactions.toLocaleString();
-    document.getElementById('totalDiamonds').textContent = appStats.totalDiamonds.toLocaleString();
-    
-    // Update stat cards
-    document.getElementById('liveUserCount').textContent = appStats.totalUsers.toLocaleString();
-    document.getElementById('liveTransactionCount').textContent = appStats.totalTransactions.toLocaleString();
-    document.getElementById('liveDiamondCount').textContent = appStats.totalDiamonds.toLocaleString();
-    document.getElementById('liveRevenue').textContent = `Rp ${formatRupiah(appStats.totalRevenue)}`;
-    
-    // Update trends
-    document.getElementById('userTrend').textContent = `+${appStats.dailyStats.users} hari ini`;
-    document.getElementById('transactionTrend').textContent = `+${appStats.dailyStats.transactions} hari ini`;
-    document.getElementById('diamondTrend').textContent = `+${appStats.dailyStats.diamonds.toLocaleString()} hari ini`;
-    document.getElementById('revenueTrend').textContent = `+${formatRupiah(appStats.dailyStats.revenue)} hari ini`;
-    
-    // Update footer stats
-    document.getElementById('footerUserCount').textContent = appStats.totalUsers.toLocaleString();
-    document.getElementById('footerTransactionCount').textContent = appStats.totalTransactions.toLocaleString();
-    document.getElementById('footerDiamondCount').textContent = appStats.totalDiamonds.toLocaleString();
-}
-
-// Start live updates simulation
-function startLiveUpdates() {
-    setInterval(() => {
-        // Simulate random activity
-        if (Math.random() > 0.7) {
-            simulateNewActivity();
-        }
-    }, 10000); // Every 10 seconds
-}
-
-// Simulate new activity
-function simulateNewActivity() {
-    const activities = [
-        { type: 'register', user: 'User' + Math.floor(Math.random() * 1000), desc: 'Bergabung sebagai member baru' },
-        { type: 'topup', user: 'User' + Math.floor(Math.random() * 1000), desc: 'Melakukan top up diamond' },
-        { type: 'promo', user: 'User' + Math.floor(Math.random() * 1000), desc: 'Menggunakan kode promo' }
-    ];
-    
-    const activity = activities[Math.floor(Math.random() * activities.length)];
-    addActivity(activity.type, activity.user, activity.desc);
-}
-
-// Add new activity
-function addActivity(type, user, desc) {
-    const activity = {
-        type: type,
-        user: user,
-        desc: desc,
-        time: new Date().toLocaleTimeString()
-    };
-    
-    appStats.recentActivities.unshift(activity);
-    if (appStats.recentActivities.length > 10) {
-        appStats.recentActivities.pop();
-    }
-    
-    saveAppStats();
-    loadRecentActivities();
-}
-
-// Load recent activities
-function loadRecentActivities() {
-    const activityList = document.getElementById('activityList');
-    if (!activityList) return;
-    
-    activityList.innerHTML = '';
-    
-    appStats.recentActivities.forEach(activity => {
-        const item = document.createElement('div');
-        item.className = 'activity-item';
-        item.innerHTML = `
-            <div class="activity-icon ${activity.type}">
-                <i class="fas ${getActivityIcon(activity.type)}"></i>
-            </div>
-            <div class="activity-details">
-                <div class="activity-user">${activity.user}</div>
-                <div class="activity-desc">${activity.desc}</div>
-                <div class="activity-time">${activity.time}</div>
-            </div>
-        `;
-        activityList.appendChild(item);
-    });
-}
-
-// Get activity icon
-function getActivityIcon(type) {
-    const icons = {
-        'register': 'fa-user-plus',
-        'topup': 'fa-shopping-cart',
-        'promo': 'fa-tag'
-    };
-    return icons[type] || 'fa-bell';
-}
-
-// Load top spenders
-function loadTopSpenders() {
-    const rankingList = document.getElementById('rankingList');
-    if (!rankingList) return;
-    
-    // Sample top spenders
-    const topSpenders = [
-        { name: 'Andi Pratama', avatar: 'AP', amount: 12500000, transactions: 45 },
-        { name: 'Budi Santoso', avatar: 'BS', amount: 9870000, transactions: 38 },
-        { name: 'Citra Dewi', avatar: 'CD', amount: 7650000, transactions: 29 },
-        { name: 'Dian Permata', avatar: 'DP', amount: 6540000, transactions: 24 },
-        { name: 'Eko Saputra', avatar: 'ES', amount: 5430000, transactions: 21 }
-    ];
-    
-    rankingList.innerHTML = '';
-    
-    topSpenders.forEach((spender, index) => {
-        const rank = index + 1;
-        const item = document.createElement('div');
-        item.className = 'ranking-item';
-        item.innerHTML = `
-            <div class="ranking-position ${rank <= 3 ? 'top' + rank : ''}">${rank}</div>
-            <img src="https://ui-avatars.com/api/?name=${spender.avatar}&background=6366f1&color=fff" alt="${spender.name}" class="ranking-avatar">
-            <div class="ranking-info">
-                <div class="ranking-name">${spender.name}</div>
-                <div class="ranking-stats">${spender.transactions} transaksi</div>
-            </div>
-            <div class="ranking-amount">Rp ${formatRupiah(spender.amount)}</div>
-        `;
-        rankingList.appendChild(item);
-    });
-}
-
-// Load testimonials
-function loadTestimonials() {
-    const testimonialList = document.getElementById('testimonialList');
-    if (!testimonialList) return;
-    
-    const testimonials = [
-        {
-            name: 'Andi Pratama',
-            avatar: 'AP',
-            rating: 5,
-            text: 'Prosesnya cepat banget! Baru 5 menit diamond langsung masuk. Recommended banget!',
-            game: 'Mobile Legends Player'
-        },
-        {
-            name: 'Siti Nurhaliza',
-            avatar: 'SN',
-            rating: 5,
-            text: 'Harga termurah dibanding toko lain. Pelayanan ramah, admin fast respon!',
-            game: 'Free Fire Player'
-        },
-        {
-            name: 'Budi Santoso',
-            avatar: 'BS',
-            rating: 5,
-            text: 'Sudah langganan 1 tahun, selalu puas. Proses cepat dan aman, recommended!',
-            game: 'PUBG Player'
-        }
-    ];
-    
-    testimonialList.innerHTML = '';
-    
-    testimonials.forEach(testimonial => {
-        const card = document.createElement('div');
-        card.className = 'testimonial-card';
-        
-        let stars = '';
-        for (let i = 0; i < testimonial.rating; i++) {
-            stars += '<i class="fas fa-star"></i>';
-        }
-        
-        card.innerHTML = `
-            <div class="testimonial-rating">${stars}</div>
-            <p>"${testimonial.text}"</p>
-            <div class="testimonial-user">
-                <img src="https://ui-avatars.com/api/?name=${testimonial.avatar}&background=6366f1&color=fff" alt="${testimonial.name}">
-                <div>
-                    <h4>${testimonial.name}</h4>
-                    <span>${testimonial.game}</span>
-                </div>
-            </div>
-        `;
-        testimonialList.appendChild(card);
-    });
-}
-
-// Product data
+// Load products to grid
 function loadProducts() {
-    products = [
-        // Mobile Legends
-        { id: 1, game: 'ml', name: '86 Diamonds', price: 17000, diamond: 86, features: ['86 Diamonds', 'Bonus 0-5 Diamonds'] },
-        { id: 2, game: 'ml', name: '172 Diamonds', price: 33000, diamond: 172, features: ['172 Diamonds', 'Bonus 0-10 Diamonds'] },
-        { id: 3, game: 'ml', name: '257 Diamonds', price: 48000, diamond: 257, features: ['257 Diamonds', 'Bonus 0-15 Diamonds'] },
-        { id: 4, game: 'ml', name: '344 Diamonds', price: 64000, diamond: 344, features: ['344 Diamonds', 'Bonus 0-20 Diamonds'] },
-        { id: 5, game: 'ml', name: '429 Diamonds', price: 79000, diamond: 429, features: ['429 Diamonds', 'Bonus 0-25 Diamonds'] },
-        { id: 6, game: 'ml', name: '514 Diamonds', price: 95000, diamond: 514, features: ['514 Diamonds', 'Bonus 0-30 Diamonds'] },
-        
-        // Free Fire
-        { id: 7, game: 'ff', name: '70 Diamonds', price: 12000, diamond: 70, features: ['70 Diamonds', 'No Bonus'] },
-        { id: 8, game: 'ff', name: '140 Diamonds', price: 23000, diamond: 140, features: ['140 Diamonds', 'No Bonus'] },
-        { id: 9, game: 'ff', name: '355 Diamonds', price: 57000, diamond: 355, features: ['355 Diamonds', 'No Bonus'] },
-        { id: 10, game: 'ff', name: '720 Diamonds', price: 114000, diamond: 720, features: ['720 Diamonds', 'No Bonus'] },
-        
-        // PUBG Mobile
-        { id: 11, game: 'pubg', name: '60 UC', price: 17000, diamond: 60, features: ['60 UC', 'No Bonus'] },
-        { id: 12, game: 'pubg', name: '180 UC', price: 48000, diamond: 180, features: ['180 UC + 25 Bonus'] },
-        { id: 13, game: 'pubg', name: '325 UC', price: 85000, diamond: 325, features: ['325 UC + 60 Bonus'] },
-        { id: 14, game: 'pubg', name: '660 UC', price: 170000, diamond: 660, features: ['660 UC + 150 Bonus'] },
-        
-        // COD Mobile
-        { id: 15, game: 'cod', name: '80 CP', price: 19000, diamond: 80, features: ['80 CP', 'No Bonus'] },
-        { id: 16, game: 'cod', name: '220 CP', price: 50000, diamond: 220, features: ['220 CP + 25 Bonus'] },
-        { id: 17, game: 'cod', name: '440 CP', price: 99000, diamond: 440, features: ['440 CP + 50 Bonus'] },
-        { id: 18, game: 'cod', name: '880 CP', price: 195000, diamond: 880, features: ['880 CP + 100 Bonus'] }
-    ];
-    
-    displayProducts(products);
-}
-
-// Display products in grid
-function displayProducts(productsToShow) {
     const productGrid = document.getElementById('productGrid');
     if (!productGrid) return;
     
     productGrid.innerHTML = '';
     
-    productsToShow.forEach(product => {
+    const activeProducts = products.filter(p => p.status === 'active');
+    
+    activeProducts.forEach(product => {
         const gameNames = {
             'ml': 'Mobile Legends',
             'ff': 'Free Fire',
@@ -299,22 +91,53 @@ function displayProducts(productsToShow) {
             'cod': 'COD Mobile'
         };
         
-        const isBelowMinPrice = product.price < 20000;
+        const card = document.createElement('div');
+        card.className = 'product-card';
+        card.innerHTML = `
+            <div class="product-badge">${gameNames[product.game]}</div>
+            <div class="product-name">${product.name}</div>
+            <div class="product-price">Rp ${formatRupiah(product.price)}</div>
+            <button class="btn-buy" onclick="openOrderModal(${product.id})" ${!currentUser ? 'disabled' : ''}>
+                ${currentUser ? 'Beli Sekarang' : 'Login untuk Membeli'}
+            </button>
+        `;
+        productGrid.appendChild(card);
+    });
+    
+    // Setup filter buttons
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            filterProducts(this.dataset.game);
+        });
+    });
+}
+
+// Filter products by game
+function filterProducts(game) {
+    const productGrid = document.getElementById('productGrid');
+    productGrid.innerHTML = '';
+    
+    let filteredProducts = products.filter(p => p.status === 'active');
+    if (game !== 'all') {
+        filteredProducts = filteredProducts.filter(p => p.game === game);
+    }
+    
+    filteredProducts.forEach(product => {
+        const gameNames = {
+            'ml': 'Mobile Legends',
+            'ff': 'Free Fire',
+            'pubg': 'PUBG Mobile',
+            'cod': 'COD Mobile'
+        };
         
         const card = document.createElement('div');
         card.className = 'product-card';
-        if (isBelowMinPrice) {
-            card.classList.add('min-price-warning');
-        }
-        
         card.innerHTML = `
             <div class="product-badge">${gameNames[product.game]}</div>
-            ${isBelowMinPrice ? '<div class="product-warning"><i class="fas fa-info-circle"></i> Min. Pembelian Rp 20rb untuk promo</div>' : ''}
             <div class="product-name">${product.name}</div>
             <div class="product-price">Rp ${formatRupiah(product.price)}</div>
-            <ul class="product-features">
-                ${product.features.map(f => `<li><i class="fas fa-check-circle"></i>${f}</li>`).join('')}
-            </ul>
             <button class="btn-buy" onclick="openOrderModal(${product.id})" ${!currentUser ? 'disabled' : ''}>
                 ${currentUser ? 'Beli Sekarang' : 'Login untuk Membeli'}
             </button>
@@ -328,75 +151,7 @@ function formatRupiah(amount) {
     return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 }
 
-// Setup event listeners
-function setupEventListeners() {
-    // Mobile menu toggle
-    document.getElementById('menuToggle').addEventListener('click', function() {
-        document.getElementById('navMenu').classList.toggle('show');
-    });
-    
-    // Filter buttons
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            
-            const game = this.dataset.game;
-            if (game === 'all') {
-                displayProducts(products);
-            } else {
-                const filtered = products.filter(p => p.game === game);
-                displayProducts(filtered);
-            }
-        });
-    });
-    
-    // Login button
-    document.getElementById('loginBtn').addEventListener('click', function() {
-        openModal('loginModal');
-    });
-    
-    // Register button
-    document.getElementById('registerBtn').addEventListener('click', function() {
-        openModal('registerModal');
-    });
-    
-    // Apply promo button
-    document.getElementById('applyPromoBtn').addEventListener('click', applyPromo);
-    
-    // Close modals when clicking outside
-    window.addEventListener('click', function(e) {
-        if (e.target.classList.contains('modal')) {
-            closeAllModals();
-        }
-    });
-    
-    // Scroll spy
-    window.addEventListener('scroll', function() {
-        const navLinks = document.querySelectorAll('.nav-link');
-        const sections = ['home', 'products', 'how-it-works', 'promo', 'stats', 'contact'];
-        
-        let current = '';
-        sections.forEach(section => {
-            const element = document.getElementById(section);
-            if (element) {
-                const rect = element.getBoundingClientRect();
-                if (rect.top <= 100) {
-                    current = section;
-                }
-            }
-        });
-        
-        navLinks.forEach(link => {
-            link.classList.remove('active');
-            if (link.getAttribute('href').slice(1) === current) {
-                link.classList.add('active');
-            }
-        });
-    });
-}
-
-// Check authentication status
+// Check authentication
 function checkAuthStatus() {
     const user = localStorage.getItem('currentUser');
     if (user) {
@@ -409,152 +164,16 @@ function checkAuthStatus() {
 function updateUIForLoggedInUser() {
     document.getElementById('loginBtn').classList.add('hidden');
     document.getElementById('registerBtn').classList.add('hidden');
-    const userProfile = document.getElementById('userProfile');
-    userProfile.classList.remove('hidden');
+    document.getElementById('userProfile').classList.remove('hidden');
     document.getElementById('usernameDisplay').textContent = currentUser.name.split(' ')[0];
     
-    // Update profile avatar
+    if (currentUser.role === 'admin') {
+        document.getElementById('adminMenu').classList.remove('hidden');
+    }
+    
+    // Update avatar
     const avatar = document.querySelector('#userProfile img');
-    avatar.src = `https://ui-avatars.com/api/?name=${currentUser.name.replace(' ', '+')}&background=6366f1&color=fff`;
-    
-    // Enable buy buttons
-    document.querySelectorAll('.btn-buy').forEach(btn => {
-        btn.disabled = false;
-        btn.textContent = 'Beli Sekarang';
-    });
-}
-
-// Toggle user menu
-function toggleUserMenu() {
-    const menu = document.getElementById('userMenu');
-    menu.classList.toggle('hidden');
-}
-
-// Show user profile
-function showUserProfile() {
-    closeAllModals();
-    const profileContent = document.getElementById('profileContent');
-    
-    // Get user transactions
-    const orders = JSON.parse(localStorage.getItem('orders')) || [];
-    const userOrders = orders.filter(o => o.userId === currentUser.id);
-    const totalSpent = userOrders.reduce((sum, order) => sum + order.total, 0);
-    const totalDiamonds = userOrders.reduce((sum, order) => sum + (order.product.diamond || 0), 0);
-    
-    profileContent.innerHTML = `
-        <div class="profile-header">
-            <img src="https://ui-avatars.com/api/?name=${currentUser.name.replace(' ', '+')}&background=6366f1&color=fff&size=128" alt="${currentUser.name}" class="profile-avatar">
-            <div class="profile-name">${currentUser.name}</div>
-            <div class="profile-email">${currentUser.email}</div>
-            <div class="profile-member">Member sejak ${new Date(currentUser.createdAt || Date.now()).toLocaleDateString('id-ID')}</div>
-        </div>
-        <div class="profile-stats">
-            <div>
-                <div class="profile-stat-value">${userOrders.length}</div>
-                <div class="profile-stat-label">Transaksi</div>
-            </div>
-            <div>
-                <div class="profile-stat-value">${totalDiamonds}</div>
-                <div class="profile-stat-label">Diamond</div>
-            </div>
-            <div>
-                <div class="profile-stat-value">Rp ${formatRupiah(totalSpent)}</div>
-                <div class="profile-stat-label">Total Belanja</div>
-            </div>
-        </div>
-        <div class="profile-info">
-            <div class="info-row">
-                <span class="info-label">User ID</span>
-                <span class="info-value">#${currentUser.id}</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Email</span>
-                <span class="info-value">${currentUser.email}</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Terdaftar</span>
-                <span class="info-value">${new Date(currentUser.createdAt || Date.now()).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
-            </div>
-        </div>
-    `;
-    
-    openModal('profileModal');
-    document.getElementById('userMenu').classList.add('hidden');
-}
-
-// Show order history
-function showOrderHistory() {
-    closeAllModals();
-    const historyContent = document.getElementById('historyContent');
-    
-    const orders = JSON.parse(localStorage.getItem('orders')) || [];
-    const userOrders = orders.filter(o => o.userId === currentUser.id).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    
-    if (userOrders.length === 0) {
-        historyContent.innerHTML = '<p class="no-history">Belum ada riwayat top up</p>';
-    } else {
-        historyContent.innerHTML = userOrders.map(order => {
-            const gameNames = {
-                'ml': 'Mobile Legends',
-                'ff': 'Free Fire',
-                'pubg': 'PUBG Mobile',
-                'cod': 'COD Mobile'
-            };
-            
-            return `
-                <div class="history-item">
-                    <div class="history-icon ${order.status}">
-                        <i class="fas ${order.status === 'success' ? 'fa-check-circle' : 'fa-clock'}"></i>
-                    </div>
-                    <div class="history-details">
-                        <div class="history-title">${gameNames[order.product.game]} - ${order.product.name}</div>
-                        <div class="history-meta">ID: ${order.gameId} | ${new Date(order.createdAt).toLocaleDateString('id-ID')}</div>
-                    </div>
-                    <div class="history-amount">Rp ${formatRupiah(order.total)}</div>
-                    <div class="history-status ${order.status}">${order.status === 'success' ? 'Berhasil' : 'Proses'}</div>
-                </div>
-            `;
-        }).join('');
-    }
-    
-    openModal('historyModal');
-    document.getElementById('userMenu').classList.add('hidden');
-}
-
-// Show voucher
-function showVoucher() {
-    showToast('info', 'Fitur voucher akan segera hadir!');
-    document.getElementById('userMenu').classList.add('hidden');
-}
-
-// Load user data
-function loadUserData() {
-    if (!localStorage.getItem('users')) {
-        const defaultUsers = [
-            {
-                id: 1,
-                name: 'Admin',
-                email: 'admin@diamondstore.com',
-                password: 'admin123',
-                isAdmin: true,
-                createdAt: new Date().toISOString()
-            },
-            {
-                id: 2,
-                name: 'Andi Pratama',
-                email: 'andi@example.com',
-                password: 'password123',
-                isAdmin: false,
-                createdAt: new Date().toISOString()
-            }
-        ];
-        localStorage.setItem('users', JSON.stringify(defaultUsers));
-        
-        // Update stats
-        appStats.totalUsers = defaultUsers.length;
-        appStats.dailyStats.users += defaultUsers.length;
-        saveAppStats();
-    }
+    avatar.src = `https://ui-avatars.com/api/?name=${currentUser.name.replace(' ', '+')}&background=3b82f6&color=fff`;
 }
 
 // Handle login
@@ -564,7 +183,6 @@ function handleLogin(event) {
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
     
-    const users = JSON.parse(localStorage.getItem('users')) || [];
     const user = users.find(u => u.email === email && u.password === password);
     
     if (user) {
@@ -572,21 +190,14 @@ function handleLogin(event) {
             id: user.id,
             name: user.name,
             email: user.email,
-            isAdmin: user.isAdmin || false,
-            createdAt: user.createdAt
+            role: user.role || 'user'
         };
         
         localStorage.setItem('currentUser', JSON.stringify(currentUser));
         
-        showToast('success', 'Login berhasil! Selamat datang kembali.');
+        showToast('success', 'Login berhasil!');
         closeModal('loginModal');
         updateUIForLoggedInUser();
-        
-        // Add activity
-        addActivity('login', currentUser.name, 'Login ke akun');
-        
-        // Reset form
-        document.getElementById('loginForm').reset();
     } else {
         showToast('error', 'Email atau password salah!');
     }
@@ -600,19 +211,11 @@ function handleRegister(event) {
     const email = document.getElementById('registerEmail').value;
     const password = document.getElementById('registerPassword').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
-    const referralCode = document.getElementById('referralCode').value;
     
     if (password !== confirmPassword) {
         showToast('error', 'Password tidak cocok!');
         return;
     }
-    
-    if (password.length < 6) {
-        showToast('error', 'Password minimal 6 karakter!');
-        return;
-    }
-    
-    const users = JSON.parse(localStorage.getItem('users')) || [];
     
     if (users.some(u => u.email === email)) {
         showToast('error', 'Email sudah terdaftar!');
@@ -624,9 +227,7 @@ function handleRegister(event) {
         name: name,
         email: email,
         password: password,
-        isAdmin: false,
-        createdAt: new Date().toISOString(),
-        referralUsed: referralCode || null
+        role: 'user'
     };
     
     users.push(newUser);
@@ -636,27 +237,18 @@ function handleRegister(event) {
         id: newUser.id,
         name: newUser.name,
         email: newUser.email,
-        isAdmin: false,
-        createdAt: newUser.createdAt
+        role: 'user'
     };
     
     localStorage.setItem('currentUser', JSON.stringify(currentUser));
     
     // Update stats
     appStats.totalUsers++;
-    appStats.dailyStats.users++;
-    saveAppStats();
     updateLiveStats();
     
-    // Add activity
-    addActivity('register', currentUser.name, 'Bergabung sebagai member baru');
-    
-    showToast('success', 'Registrasi berhasil! Selamat datang.');
+    showToast('success', 'Registrasi berhasil!');
     closeModal('registerModal');
     updateUIForLoggedInUser();
-    
-    // Reset form
-    document.getElementById('registerForm').reset();
 }
 
 // Open order modal
@@ -677,438 +269,196 @@ function openOrderModal(productId) {
         'cod': 'COD Mobile'
     };
     
-    const orderDetail = document.getElementById('orderProductDetail');
-    orderDetail.innerHTML = `
+    document.getElementById('orderProductDetail').innerHTML = `
         <h4>${gameNames[selectedProduct.game]}</h4>
         <p>${selectedProduct.name}</p>
         <p class="product-price">Rp ${formatRupiah(selectedProduct.price)}</p>
-        ${selectedProduct.price < 20000 ? '<p class="warning-text"><i class="fas fa-exclamation-triangle"></i> Minimal pembelian Rp 20.000 untuk menggunakan promo</p>' : ''}
     `;
     
     document.getElementById('productPrice').textContent = `Rp ${formatRupiah(selectedProduct.price)}`;
-    document.getElementById('gameName').textContent = gameNames[selectedProduct.game];
-    updateTotalPayment();
-    
-    // Reset payment steps
-    resetPaymentSteps();
+    document.getElementById('totalPayment').textContent = `Rp ${formatRupiah(selectedProduct.price + 1000)}`;
+    document.getElementById('paymentTotal').textContent = `Rp ${formatRupiah(selectedProduct.price + 1000)}`;
     
     openModal('orderModal');
 }
 
-// Reset payment steps
-function resetPaymentSteps() {
-    document.getElementById('step1').classList.add('active');
-    document.getElementById('step2').classList.remove('active');
-    document.getElementById('step3').classList.remove('active');
-    document.getElementById('step4').classList.remove('active');
-    document.getElementById('ewalletPaymentContainer').classList.add('hidden');
-    document.getElementById('verificationStatus').innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Menunggu verifikasi</span>';
-    document.getElementById('verifyBtn').disabled = false;
-}
-
-// Handle e-wallet selection
-function handleEwalletSelection() {
-    const method = document.getElementById('paymentMethod').value;
-    const container = document.getElementById('ewalletPaymentContainer');
-    const ewalletName = document.getElementById('selectedEwalletName');
-    const paymentEwallet = document.getElementById('paymentEwalletName');
-    const payEwallet = document.getElementById('payEwalletName');
-    const redirectEwallet = document.getElementById('redirectEwalletName');
-    const ewalletHeader = document.getElementById('ewalletHeader');
+// Select payment method
+function selectPayment(method) {
+    const instructions = document.getElementById('paymentInstructions');
+    const qrisDisplay = document.getElementById('qrisDisplay');
+    const uploadProof = document.getElementById('uploadProof');
     
-    const walletNames = {
-        'dana': 'DANA',
-        'gopay': 'GoPay',
-        'ovo': 'OVO'
-    };
+    instructions.classList.add('hidden');
+    qrisDisplay.classList.add('hidden');
+    uploadProof.classList.add('hidden');
     
-    const walletColors = {
-        'dana': '#0088cc',
-        'gopay': '#00a63f',
-        'ovo': '#8a2be2'
-    };
-    
-    if (method && walletNames[method]) {
-        container.classList.remove('hidden');
-        ewalletName.textContent = walletNames[method];
-        paymentEwallet.textContent = walletNames[method];
-        payEwallet.textContent = walletNames[method];
-        redirectEwallet.textContent = walletNames[method];
-        ewalletHeader.style.borderBottomColor = walletColors[method];
-        
-        // Update total payment
-        document.getElementById('paymentTotal').textContent = document.getElementById('totalPayment').textContent;
+    if (method === 'qris') {
+        qrisDisplay.classList.remove('hidden');
+        uploadProof.classList.remove('hidden');
     } else {
-        container.classList.add('hidden');
+        instructions.classList.remove('hidden');
+        uploadProof.classList.remove('hidden');
+        document.getElementById('instructionBox').innerHTML = `
+            <h4><i class="fas fa-info-circle"></i> Instruksi Pembayaran</h4>
+            <div class="bank-detail">
+                <p>Transfer ke:</p>
+                <h3>0822 1075 6431</h3>
+                <p>a.n <strong>Benoy</strong></p>
+                <p>Via <strong>${method.toUpperCase()}</strong></p>
+            </div>
+            <div class="total-payment">
+                <span>Total yang harus dibayar:</span>
+                <strong>${document.getElementById('totalPayment').textContent}</strong>
+            </div>
+        `;
     }
 }
 
-// Verify game account
-function verifyGameAccount() {
+// Submit order
+function submitOrder() {
     const gameId = document.getElementById('gameId').value;
     const zoneId = document.getElementById('zoneId').value;
-    const verifyBtn = document.getElementById('verifyBtn');
-    const verificationStatus = document.getElementById('verificationStatus');
+    const paymentMethod = document.querySelector('input[name="payment"]:checked')?.value;
+    const paymentProof = document.getElementById('paymentProof').files[0];
     
     if (!gameId) {
-        showToast('error', 'Masukkan User ID game terlebih dahulu!');
+        showToast('error', 'Masukkan User ID!');
         return;
     }
     
-    // Simulate verification
-    verificationStatus.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Memverifikasi akun...</span>';
-    verifyBtn.disabled = true;
-    
-    setTimeout(() => {
-        // Random success/fail for demo
-        const success = Math.random() > 0.2;
-        
-        if (success) {
-            verificationStatus.innerHTML = '<i class="fas fa-check-circle" style="color: #4caf50;"></i> <span>Akun ditemukan!</span>';
-            showToast('success', 'Akun game berhasil diverifikasi');
-            
-            // Move to step 2
-            document.getElementById('step1').classList.remove('active');
-            document.getElementById('step2').classList.add('active');
-        } else {
-            verificationStatus.innerHTML = '<i class="fas fa-times-circle" style="color: #dc3545;"></i> <span>Akun tidak ditemukan. Periksa kembali ID Anda.</span>';
-            verifyBtn.disabled = false;
-            showToast('error', 'Verifikasi gagal. Pastikan ID game benar.');
-        }
-    }, 2000);
-}
-
-// Process e-wallet payment
-function processEwalletPayment() {
-    const method = document.getElementById('paymentMethod').value;
-    const total = calculateTotal();
-    
-    const walletDeepLinks = {
-        'dana': {
-            android: 'intent://danain/id/#Intent;package=id.dana;end',
-            ios: 'dana://',
-            web: 'https://dana.id'
-        },
-        'gopay': {
-            android: 'gopay://',
-            ios: 'gopay://',
-            web: 'https://gopay.co.id'
-        },
-        'ovo': {
-            android: 'ovo://',
-            ios: 'ovo://',
-            web: 'https://ovo.id'
-        }
-    };
-    
-    const walletNames = {
-        'dana': 'DANA',
-        'gopay': 'GoPay',
-        'ovo': 'OVO'
-    };
-    
-    // Show processing
-    document.getElementById('step2').classList.remove('active');
-    document.getElementById('step3').classList.add('active');
-    
-    // Try to open e-wallet app
-    const deepLink = walletDeepLinks[method];
-    const isAndroid = /Android/i.test(navigator.userAgent);
-    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-    
-    let link = '';
-    if (isAndroid) {
-        link = deepLink.android;
-    } else if (isIOS) {
-        link = deepLink.ios;
-    } else {
-        link = deepLink.web;
+    if (!paymentMethod) {
+        showToast('error', 'Pilih metode pembayaran!');
+        return;
     }
     
-    // Open app or fallback to web
-    window.location.href = link;
+    if (!paymentProof) {
+        showToast('error', 'Upload bukti pembayaran!');
+        return;
+    }
     
-    // Simulate payment process
-    setTimeout(() => {
-        // Random success/fail for demo
-        const success = Math.random() > 0.1;
+    // Simulate file reading
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const transaction = {
+            id: 'TRX' + Date.now(),
+            userId: currentUser.id,
+            userName: currentUser.name,
+            product: selectedProduct,
+            gameId: gameId,
+            zoneId: zoneId,
+            paymentMethod: paymentMethod,
+            paymentProof: e.target.result,
+            total: selectedProduct.price + 1000,
+            status: 'pending',
+            createdAt: new Date().toISOString()
+        };
         
-        if (success) {
-            // Payment successful
-            document.getElementById('processingDetail').classList.remove('hidden');
-            document.getElementById('processingGameId').textContent = document.getElementById('gameId').value;
-            document.getElementById('processingProduct').textContent = selectedProduct.name;
-            
-            setTimeout(() => {
-                // Move to success step
-                document.getElementById('step3').classList.remove('active');
-                document.getElementById('step4').classList.add('active');
-                
-                // Update success details
-                document.getElementById('successGameId').textContent = document.getElementById('gameId').value;
-                document.getElementById('successProduct').textContent = selectedProduct.name;
-                document.getElementById('successDiamond').textContent = selectedProduct.diamond;
-                document.getElementById('successTime').textContent = new Date().toLocaleTimeString('id-ID');
-                
-                // Record transaction
-                recordTransaction();
-                
-                showToast('success', `Pembayaran via ${walletNames[method]} berhasil! Diamond sedang dikirim.`);
-            }, 2000);
-        } else {
-            // Payment failed
-            showToast('error', 'Pembayaran gagal. Silakan coba lagi.');
-            document.getElementById('step3').classList.remove('active');
-            document.getElementById('step2').classList.add('active');
-            document.getElementById('processingDetail').classList.add('hidden');
-        }
+        transactions.push(transaction);
+        localStorage.setItem('transactions', JSON.stringify(transactions));
+        
+        // Update stats
+        appStats.totalTransactions++;
+        appStats.totalDiamonds += selectedProduct.diamond;
+        appStats.totalRevenue += transaction.total;
+        updateLiveStats();
+        
+        showToast('success', 'Pesanan berhasil dikirim! Admin akan segera memproses.');
+        closeModal('orderModal');
+        
+        // Reset form
+        document.getElementById('gameId').value = '';
+        document.getElementById('zoneId').value = '';
+        document.getElementById('fileName').textContent = '';
+        document.querySelectorAll('input[name="payment"]').forEach(r => r.checked = false);
+        document.getElementById('paymentInstructions').classList.add('hidden');
+        document.getElementById('qrisDisplay').classList.add('hidden');
+        document.getElementById('uploadProof').classList.add('hidden');
+        
+        // Update notification badge if admin is logged in
+        updateNotificationBadge();
+    };
+    
+    reader.readAsDataURL(paymentProof);
+}
+
+// Update file name
+function updateFileName(input) {
+    const fileName = document.getElementById('fileName');
+    if (input.files && input.files[0]) {
+        fileName.textContent = input.files[0].name;
+    }
+}
+
+// Update live stats
+function updateLiveStats() {
+    document.getElementById('totalUsers').textContent = appStats.totalUsers.toLocaleString();
+    document.getElementById('totalTransactions').textContent = appStats.totalTransactions.toLocaleString();
+    document.getElementById('totalDiamonds').textContent = appStats.totalDiamonds.toLocaleString();
+    
+    if (document.getElementById('dashboardUsers')) {
+        document.getElementById('dashboardUsers').textContent = appStats.totalUsers.toLocaleString();
+        document.getElementById('dashboardTransactions').textContent = appStats.totalTransactions.toLocaleString();
+        document.getElementById('dashboardDiamonds').textContent = appStats.totalDiamonds.toLocaleString();
+        document.getElementById('dashboardRevenue').textContent = `Rp ${formatRupiah(appStats.totalRevenue)}`;
+    }
+}
+
+// Update notification badge
+function updateNotificationBadge() {
+    const pendingCount = transactions.filter(t => t.status === 'pending').length;
+    const badge = document.getElementById('notificationBadge');
+    const adminBadge = document.getElementById('adminPendingCount');
+    
+    if (badge) {
+        badge.textContent = pendingCount;
+        badge.style.display = pendingCount > 0 ? 'block' : 'none';
+    }
+    
+    if (adminBadge) {
+        adminBadge.textContent = pendingCount;
+    }
+}
+
+// Toggle user menu
+function toggleUserMenu() {
+    document.getElementById('userMenu').classList.toggle('hidden');
+}
+
+// Toggle mobile menu
+function toggleMenu() {
+    document.getElementById('navMenu').classList.toggle('show');
+}
+
+// Show toast
+function showToast(type, message) {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `
+        <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
+        <span>${message}</span>
+    `;
+    container.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.remove();
     }, 3000);
-}
-
-// Record transaction
-function recordTransaction() {
-    // Create order record
-    const orderData = {
-        id: Date.now(),
-        userId: currentUser.id,
-        userName: currentUser.name,
-        userEmail: currentUser.email,
-        product: selectedProduct,
-        gameId: document.getElementById('gameId').value,
-        zoneId: document.getElementById('zoneId').value,
-        paymentMethod: document.getElementById('paymentMethod').value,
-        total: calculateTotal(),
-        promoCode: appliedPromo ? appliedPromo.code : null,
-        discount: appliedPromo ? appliedPromo.discount : 0,
-        status: 'success',
-        diamondAmount: selectedProduct.diamond,
-        createdAt: new Date().toISOString()
-    };
-    
-    // Save to localStorage
-    const orders = JSON.parse(localStorage.getItem('orders')) || [];
-    orders.push(orderData);
-    localStorage.setItem('orders', JSON.stringify(orders));
-    
-    // Mark promo code as used if applied
-    if (appliedPromo) {
-        markPromoAsUsed(appliedPromo.code);
-    }
-    
-    // Update stats
-    appStats.totalTransactions++;
-    appStats.totalDiamonds += selectedProduct.diamond || 0;
-    appStats.totalRevenue += orderData.total;
-    appStats.dailyStats.transactions++;
-    appStats.dailyStats.diamonds += selectedProduct.diamond || 0;
-    appStats.dailyStats.revenue += orderData.total;
-    saveAppStats();
-    updateLiveStats();
-    
-    // Add activity
-    addActivity('topup', currentUser.name, `Top up ${selectedProduct.name} untuk ${selectedProduct.game}`);
-    
-    // Update notification badge
-    updateNotificationBadge();
-}
-
-// Update stats after transaction
-function updateStatsAfterTransaction() {
-    updateLiveStats();
-}
-
-// Handle order (fallback for manual orders)
-function handleOrder(event) {
-    event.preventDefault();
-    // This is for manual orders, but we're using auto top up
-    showToast('info', 'Gunakan fitur Auto Top Up dengan memilih e-wallet di atas');
-}
-
-// Select wallet from homepage
-function selectWallet(wallet) {
-    if (!currentUser) {
-        showToast('warning', 'Silakan login terlebih dahulu!');
-        openModal('loginModal');
-        return;
-    }
-    
-    // Scroll to products
-    scrollToProducts();
-    
-    // Show toast
-    const walletNames = {
-        'dana': 'DANA',
-        'gopay': 'GoPay',
-        'ovo': 'OVO'
-    };
-    
-    showToast('success', `Pilih paket diamond untuk top up via ${walletNames[wallet]}`);
-}
-
-// Calculate total payment
-function calculateTotal() {
-    let total = selectedProduct ? selectedProduct.price : 0;
-    total += 1000; // Service fee
-    
-    if (appliedPromo && selectedProduct && selectedProduct.price >= 20000) {
-        total = total - (total * appliedPromo.discount / 100);
-    }
-    
-    return Math.round(total);
-}
-
-// Update total payment display
-function updateTotalPayment() {
-    const total = calculateTotal();
-    document.getElementById('totalPayment').textContent = `Rp ${formatRupiah(total)}`;
-    document.getElementById('paymentTotal').textContent = `Rp ${formatRupiah(total)}`;
-    
-    // Update discount row
-    if (appliedPromo) {
-        const discountAmount = selectedProduct ? (selectedProduct.price + 1000) * (appliedPromo.discount / 100) : 0;
-        document.getElementById('discountAmount').textContent = `-Rp ${formatRupiah(Math.round(discountAmount))}`;
-        document.getElementById('discountRow').classList.remove('hidden');
-    } else {
-        document.getElementById('discountRow').classList.add('hidden');
-    }
-}
-
-// Apply promo code
-function applyPromo() {
-    const promoCode = document.getElementById('promoCode').value.toUpperCase();
-    const promoMessage = document.getElementById('promoMessage');
-    
-    // Validasi user harus login
-    if (!currentUser) {
-        promoMessage.className = 'promo-message error';
-        promoMessage.innerHTML = '<i class="fas fa-exclamation-circle"></i> Silakan login terlebih dahulu untuk menggunakan promo!';
-        return;
-    }
-    
-    // Cek apakah produk sudah dipilih
-    if (!selectedProduct) {
-        promoMessage.className = 'promo-message error';
-        promoMessage.innerHTML = '<i class="fas fa-exclamation-circle"></i> Pilih produk terlebih dahulu!';
-        return;
-    }
-    
-    // Validasi minimal pembelian Rp 20.000
-    if (selectedProduct.price < 20000) {
-        promoMessage.className = 'promo-message error';
-        promoMessage.innerHTML = '<i class="fas fa-exclamation-circle"></i> Minimal pembelian Rp 20.000 untuk menggunakan promo!';
-        return;
-    }
-    
-    // Promo codes
-    const validPromos = [
-        { code: 'WELCOME10', discount: 10, description: 'Diskon 10% untuk member baru' },
-        { code: 'DIAMOND20', discount: 20, description: 'Diskon 20% spesial diamond' },
-        { code: 'NEWUSER30', discount: 30, description: 'Diskon 30% untuk pengguna baru' },
-        { code: 'FLASHSALE25', discount: 25, description: 'Flash sale 25% terbatas' }
-    ];
-    
-    const promo = validPromos.find(p => p.code === promoCode);
-    
-    if (promo) {
-        // Cek apakah kode promo sudah pernah dipakai
-        if (isPromoUsed(promoCode)) {
-            promoMessage.className = 'promo-message error';
-            promoMessage.innerHTML = '<i class="fas fa-times-circle"></i> Kode promo sudah pernah digunakan!';
-            return;
-        }
-        
-        appliedPromo = promo;
-        promoMessage.className = 'promo-message success';
-        promoMessage.innerHTML = `
-            <i class="fas fa-check-circle"></i>
-            <strong>Promo berhasil!</strong><br>
-            ${promo.description}<br>
-            Diskon ${promo.discount}% (Sekali Pakai)
-        `;
-        
-        // Update total
-        updateTotalPayment();
-        
-        showToast('success', `Promo ${promo.code} berhasil diaplikasikan!`);
-        
-        // Disable promo input
-        document.getElementById('promoCode').disabled = true;
-        document.getElementById('applyPromoBtn').disabled = true;
-        document.getElementById('applyPromoBtn').textContent = 'Promo Applied';
-        
-        // Add activity
-        addActivity('promo', currentUser.name, `Menggunakan promo ${promo.code}`);
-    } else {
-        promoMessage.className = 'promo-message error';
-        promoMessage.innerHTML = '<i class="fas fa-times-circle"></i> Kode promo tidak valid!';
-    }
-}
-
-// Load used promo codes
-function loadUsedPromoCodes() {
-    const used = localStorage.getItem('usedPromoCodes');
-    if (used) {
-        usedPromoCodes = JSON.parse(used);
-    } else {
-        usedPromoCodes = {};
-        localStorage.setItem('usedPromoCodes', JSON.stringify(usedPromoCodes));
-    }
-}
-
-// Save used promo codes
-function saveUsedPromoCodes() {
-    localStorage.setItem('usedPromoCodes', JSON.stringify(usedPromoCodes));
-}
-
-// Mark promo as used
-function markPromoAsUsed(promoCode) {
-    if (!currentUser) return;
-    
-    if (!usedPromoCodes[currentUser.id]) {
-        usedPromoCodes[currentUser.id] = [];
-    }
-    
-    if (!usedPromoCodes[currentUser.id].includes(promoCode)) {
-        usedPromoCodes[currentUser.id].push(promoCode);
-        saveUsedPromoCodes();
-    }
-}
-
-// Check if promo is used
-function isPromoUsed(promoCode) {
-    if (!currentUser) return false;
-    return usedPromoCodes[currentUser.id] && usedPromoCodes[currentUser.id].includes(promoCode);
 }
 
 // Open modal
 function openModal(modalId) {
-    closeAllModals();
     document.getElementById(modalId).classList.add('show');
-    document.body.style.overflow = 'hidden';
 }
 
 // Close modal
 function closeModal(modalId) {
     document.getElementById(modalId).classList.remove('show');
-    document.body.style.overflow = 'auto';
 }
 
-// Close all modals
-function closeAllModals() {
-    document.querySelectorAll('.modal').forEach(modal => {
-        modal.classList.remove('show');
-    });
-    document.body.style.overflow = 'auto';
-}
-
-// Switch between login and register
+// Switch modal
 function switchModal(type) {
-    closeAllModals();
-    if (type === 'login') {
-        openModal('loginModal');
-    } else {
-        openModal('registerModal');
-    }
+    closeModal(type === 'login' ? 'registerModal' : 'loginModal');
+    openModal(type === 'login' ? 'loginModal' : 'registerModal');
 }
 
 // Scroll to products
@@ -1116,105 +466,578 @@ function scrollToProducts() {
     document.getElementById('products').scrollIntoView({ behavior: 'smooth' });
 }
 
-// Show toast notification
-function showToast(type, message) {
-    const container = document.getElementById('toastContainer');
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
+// Apply promo
+function applyPromo() {
+    const code = document.getElementById('promoCode').value.toUpperCase();
+    const promo = promos.find(p => p.code === code);
     
-    const icons = {
-        success: 'fa-check-circle',
-        error: 'fa-exclamation-circle',
-        warning: 'fa-exclamation-triangle',
-        info: 'fa-info-circle'
-    };
-    
-    toast.innerHTML = `
-        <i class="fas ${icons[type]}"></i>
-        <span class="toast-message">${message}</span>
-        <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
-    `;
-    
-    container.appendChild(toast);
-    
-    setTimeout(() => {
-        if (toast.parentElement) {
-            toast.remove();
-        }
-    }, 3000);
+    if (promo) {
+        showToast('success', `Promo ${code} berhasil! Diskon ${promo.discount}%`);
+        document.getElementById('promoMessage').innerHTML = `
+            <div class="promo-message success">
+                <i class="fas fa-check-circle"></i> Promo berhasil! Diskon ${promo.discount}%
+            </div>
+        `;
+    } else {
+        document.getElementById('promoMessage').innerHTML = `
+            <div class="promo-message error">
+                <i class="fas fa-times-circle"></i> Kode promo tidak valid!
+            </div>
+        `;
+    }
 }
 
 // Logout
 function logout() {
     localStorage.removeItem('currentUser');
     currentUser = null;
-    appliedPromo = null;
     
-    // Reset UI
     document.getElementById('loginBtn').classList.remove('hidden');
     document.getElementById('registerBtn').classList.remove('hidden');
     document.getElementById('userProfile').classList.add('hidden');
+    document.getElementById('adminMenu').classList.add('hidden');
     document.getElementById('userMenu').classList.add('hidden');
     
-    // Disable buy buttons
-    document.querySelectorAll('.btn-buy').forEach(btn => {
-        btn.disabled = true;
-        btn.textContent = 'Login untuk Membeli';
-    });
-    
-    // Reset promo input
-    document.getElementById('promoCode').disabled = false;
-    document.getElementById('applyPromoBtn').disabled = false;
-    document.getElementById('applyPromoBtn').textContent = 'Apply';
-    document.getElementById('promoMessage').innerHTML = '';
-    
     showToast('success', 'Berhasil logout!');
+    
+    // Reload products to disable buy buttons
+    loadProducts();
 }
 
-// Update notification badge
-function updateNotificationBadge() {
-    const orders = JSON.parse(localStorage.getItem('orders')) || [];
-    const pendingOrders = orders.filter(o => o.status === 'pending').length;
+// ============= ADMIN FUNCTIONS =============
+
+// Open admin dashboard
+function openAdminDashboard() {
+    if (!currentUser || currentUser.role !== 'admin') {
+        showToast('error', 'Akses ditolak!');
+        return;
+    }
     
-    const badge = document.querySelector('.notification-badge');
-    if (badge) {
-        if (pendingOrders > 0) {
-            badge.textContent = pendingOrders;
-            badge.style.display = 'block';
-        } else {
-            badge.style.display = 'none';
-        }
+    loadAdminData();
+    openModal('adminDashboardModal');
+    document.getElementById('userMenu').classList.add('hidden');
+}
+
+// Load admin data
+function loadAdminData() {
+    loadTransactions();
+    loadAdminProducts();
+    loadUsers();
+    loadPayments();
+    updateNotificationBadge();
+}
+
+// Load transactions for admin
+function loadTransactions() {
+    const list = document.getElementById('transactionsList');
+    const recentList = document.getElementById('recentTransactionsList');
+    
+    if (!list) return;
+    
+    const sorted = [...transactions].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    
+    // Main transactions list
+    list.innerHTML = sorted.map(t => `
+        <div class="transaction-item">
+            <div class="transaction-info">
+                <div><strong>${t.userName}</strong> - ${t.product.name}</div>
+                <div class="transaction-meta">ID: ${t.gameId} | ${new Date(t.createdAt).toLocaleString('id-ID')}</div>
+            </div>
+            <div class="transaction-amount">Rp ${formatRupiah(t.total)}</div>
+            <div class="transaction-status status-${t.status}">${t.status}</div>
+            <div class="transaction-actions">
+                <button class="btn-view" onclick="viewTransaction('${t.id}')">Detail</button>
+                ${t.paymentProof ? `<button class="btn-view" onclick="viewPaymentProof('${t.id}')">Bukti</button>` : ''}
+            </div>
+        </div>
+    `).join('');
+    
+    // Recent transactions for dashboard
+    if (recentList) {
+        recentList.innerHTML = sorted.slice(0, 5).map(t => `
+            <div class="transaction-item">
+                <div class="transaction-info">
+                    <div><strong>${t.userName}</strong> - ${t.product.name}</div>
+                    <div class="transaction-meta">${new Date(t.createdAt).toLocaleString('id-ID')}</div>
+                </div>
+                <div class="transaction-amount">Rp ${formatRupiah(t.total)}</div>
+                <div class="transaction-status status-${t.status}">${t.status}</div>
+            </div>
+        `).join('');
     }
 }
 
-// View all activities
-function viewAllActivities() {
-    showToast('info', 'Fitur lihat semua aktivitas akan segera hadir!');
+// Load products for admin
+function loadAdminProducts() {
+    const list = document.getElementById('adminProductsList');
+    if (!list) return;
+    
+    const gameNames = {
+        'ml': 'Mobile Legends',
+        'ff': 'Free Fire',
+        'pubg': 'PUBG Mobile',
+        'cod': 'COD Mobile'
+    };
+    
+    list.innerHTML = products.map(p => `
+        <tr>
+            <td>${p.id}</td>
+            <td>${gameNames[p.game]}</td>
+            <td>${p.name}</td>
+            <td>${p.diamond}</td>
+            <td>Rp ${formatRupiah(p.price)}</td>
+            <td><span class="status-${p.status}">${p.status}</span></td>
+            <td>
+                <button class="btn-edit" onclick="editProduct(${p.id})">Edit</button>
+                <button class="btn-delete" onclick="deleteProduct(${p.id})">Hapus</button>
+            </td>
+        </tr>
+    `).join('');
 }
 
-// Initialize notification badge
-updateNotificationBadge();
+// Load users for admin
+function loadUsers() {
+    const list = document.getElementById('usersList');
+    if (!list) return;
+    
+    list.innerHTML = users.map(u => {
+        const userTransactions = transactions.filter(t => t.userId === u.id);
+        const totalSpent = userTransactions.reduce((sum, t) => sum + t.total, 0);
+        
+        return `
+            <tr>
+                <td>${u.id}</td>
+                <td>${u.name}</td>
+                <td>${u.email}</td>
+                <td>${userTransactions.length}</td>
+                <td>Rp ${formatRupiah(totalSpent)}</td>
+                <td>${u.role || 'user'}</td>
+                <td>
+                    ${u.role !== 'admin' ? `<button class="btn-delete" onclick="deleteUser(${u.id})">Hapus</button>` : ''}
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
 
-// Auto-refresh notification badge
-setInterval(updateNotificationBadge, 30000);
+// Load payments
+function loadPayments() {
+    const grid = document.getElementById('paymentsGrid');
+    if (!grid) return;
+    
+    const pendingTransactions = transactions.filter(t => t.paymentProof && t.status === 'pending');
+    
+    grid.innerHTML = pendingTransactions.map(t => `
+        <div class="payment-card" onclick="viewPaymentProof('${t.id}')">
+            <img src="${t.paymentProof}" alt="Bukti Pembayaran">
+            <div><strong>${t.userName}</strong></div>
+            <div>Rp ${formatRupiah(t.total)}</div>
+            <div class="transaction-status status-pending">Pending</div>
+        </div>
+    `).join('');
+    
+    if (pendingTransactions.length === 0) {
+        grid.innerHTML = '<p style="text-align: center; padding: 40px;">Tidak ada bukti pembayaran pending</p>';
+    }
+}
+
+// Filter admin products
+function filterAdminProducts() {
+    const game = document.getElementById('filterGameAdmin').value;
+    const list = document.getElementById('adminProductsList');
+    
+    const gameNames = {
+        'ml': 'Mobile Legends',
+        'ff': 'Free Fire',
+        'pubg': 'PUBG Mobile',
+        'cod': 'COD Mobile'
+    };
+    
+    let filtered = products;
+    if (game !== 'all') {
+        filtered = products.filter(p => p.game === game);
+    }
+    
+    list.innerHTML = filtered.map(p => `
+        <tr>
+            <td>${p.id}</td>
+            <td>${gameNames[p.game]}</td>
+            <td>${p.name}</td>
+            <td>${p.diamond}</td>
+            <td>Rp ${formatRupiah(p.price)}</td>
+            <td><span class="status-${p.status}">${p.status}</span></td>
+            <td>
+                <button class="btn-edit" onclick="editProduct(${p.id})">Edit</button>
+                <button class="btn-delete" onclick="deleteProduct(${p.id})">Hapus</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// Show add product modal
+function showAddProductModal() {
+    document.getElementById('productModalTitle').textContent = 'Tambah Produk';
+    document.getElementById('productId').value = '';
+    document.getElementById('productGame').value = 'ml';
+    document.getElementById('productName').value = '';
+    document.getElementById('productDiamond').value = '';
+    document.getElementById('productPrice').value = '';
+    document.getElementById('productBonus').value = '';
+    document.getElementById('productStatus').value = 'active';
+    
+    openModal('productModal');
+}
+
+// Edit product
+function editProduct(id) {
+    const product = products.find(p => p.id === id);
+    if (!product) return;
+    
+    document.getElementById('productModalTitle').textContent = 'Edit Produk';
+    document.getElementById('productId').value = product.id;
+    document.getElementById('productGame').value = product.game;
+    document.getElementById('productName').value = product.name;
+    document.getElementById('productDiamond').value = product.diamond;
+    document.getElementById('productPrice').value = product.price;
+    document.getElementById('productBonus').value = product.bonus || '';
+    document.getElementById('productStatus').value = product.status;
+    
+    openModal('productModal');
+}
+
+// Save product
+function saveProduct(event) {
+    event.preventDefault();
+    
+    const id = document.getElementById('productId').value;
+    const product = {
+        id: id ? parseInt(id) : products.length + 1,
+        game: document.getElementById('productGame').value,
+        name: document.getElementById('productName').value,
+        diamond: parseInt(document.getElementById('productDiamond').value),
+        price: parseInt(document.getElementById('productPrice').value),
+        bonus: document.getElementById('productBonus').value,
+        status: document.getElementById('productStatus').value
+    };
+    
+    if (id) {
+        // Edit existing
+        const index = products.findIndex(p => p.id === parseInt(id));
+        if (index !== -1) {
+            products[index] = product;
+        }
+    } else {
+        // Add new
+        products.push(product);
+    }
+    
+    localStorage.setItem('products', JSON.stringify(products));
+    
+    closeModal('productModal');
+    loadAdminProducts();
+    loadProducts(); // Reload frontend products
+    showToast('success', 'Produk berhasil disimpan!');
+}
+
+// Delete product
+function deleteProduct(id) {
+    if (!confirm('Yakin ingin menghapus produk ini?')) return;
+    
+    products = products.filter(p => p.id !== id);
+    localStorage.setItem('products', JSON.stringify(products));
+    
+    loadAdminProducts();
+    loadProducts();
+    showToast('success', 'Produk berhasil dihapus!');
+}
+
+// View transaction detail
+function viewTransaction(id) {
+    const transaction = transactions.find(t => t.id === id);
+    if (!transaction) return;
+    
+    const detail = document.getElementById('transactionDetail');
+    detail.innerHTML = `
+        <div style="padding: 20px;">
+            <p><strong>ID Transaksi:</strong> ${transaction.id}</p>
+            <p><strong>User:</strong> ${transaction.userName}</p>
+            <p><strong>Produk:</strong> ${transaction.product.name}</p>
+            <p><strong>Game ID:</strong> ${transaction.gameId}</p>
+            <p><strong>Zone ID:</strong> ${transaction.zoneId || '-'}</p>
+            <p><strong>Metode:</strong> ${transaction.paymentMethod}</p>
+            <p><strong>Total:</strong> Rp ${formatRupiah(transaction.total)}</p>
+            <p><strong>Status:</strong> ${transaction.status}</p>
+            <p><strong>Waktu:</strong> ${new Date(transaction.createdAt).toLocaleString('id-ID')}</p>
+        </div>
+    `;
+    
+    openModal('transactionDetailModal');
+}
+
+// View payment proof
+function viewPaymentProof(id) {
+    const transaction = transactions.find(t => t.id === id);
+    if (!transaction || !transaction.paymentProof) return;
+    
+    document.getElementById('proofImage').src = transaction.paymentProof;
+    document.getElementById('proofImage').dataset.id = id;
+    
+    openModal('paymentProofModal');
+}
+
+// Update transaction status
+function updateTransactionStatus(status) {
+    const img = document.getElementById('proofImage');
+    const id = img.dataset.id;
+    
+    const transaction = transactions.find(t => t.id === id);
+    if (transaction) {
+        transaction.status = status;
+        localStorage.setItem('transactions', JSON.stringify(transactions));
+        
+        closeModal('paymentProofModal');
+        loadTransactions();
+        loadPayments();
+        updateNotificationBadge();
+        
+        showToast('success', `Transaksi ${status === 'success' ? 'diterima' : 'ditolak'}!`);
+    }
+}
+
+// Delete user
+function deleteUser(id) {
+    if (!confirm('Yakin ingin menghapus user ini?')) return;
+    
+    users = users.filter(u => u.id !== id);
+    localStorage.setItem('users', JSON.stringify(users));
+    
+    loadUsers();
+    showToast('success', 'User berhasil dihapus!');
+}
+
+// Filter transactions
+function filterTransactions() {
+    const search = document.getElementById('searchTransaction')?.value.toLowerCase() || '';
+    const status = document.getElementById('filterStatus')?.value || 'all';
+    
+    const filtered = transactions.filter(t => {
+        const matchesSearch = t.userName?.toLowerCase().includes(search) || 
+                             t.gameId?.toLowerCase().includes(search) ||
+                             t.id?.toLowerCase().includes(search);
+        const matchesStatus = status === 'all' || t.status === status;
+        return matchesSearch && matchesStatus;
+    });
+    
+    const list = document.getElementById('transactionsList');
+    list.innerHTML = filtered.map(t => `
+        <div class="transaction-item">
+            <div class="transaction-info">
+                <div><strong>${t.userName}</strong> - ${t.product.name}</div>
+                <div class="transaction-meta">ID: ${t.gameId} | ${new Date(t.createdAt).toLocaleString('id-ID')}</div>
+            </div>
+            <div class="transaction-amount">Rp ${formatRupiah(t.total)}</div>
+            <div class="transaction-status status-${t.status}">${t.status}</div>
+            <div class="transaction-actions">
+                <button class="btn-view" onclick="viewTransaction('${t.id}')">Detail</button>
+                ${t.paymentProof ? `<button class="btn-view" onclick="viewPaymentProof('${t.id}')">Bukti</button>` : ''}
+            </div>
+        </div>
+    `).join('');
+}
+
+// Filter users
+function filterUsers() {
+    const search = document.getElementById('searchUser')?.value.toLowerCase() || '';
+    
+    const filtered = users.filter(u => 
+        u.name?.toLowerCase().includes(search) || 
+        u.email?.toLowerCase().includes(search)
+    );
+    
+    const list = document.getElementById('usersList');
+    list.innerHTML = filtered.map(u => {
+        const userTransactions = transactions.filter(t => t.userId === u.id);
+        const totalSpent = userTransactions.reduce((sum, t) => sum + t.total, 0);
+        
+        return `
+            <tr>
+                <td>${u.id}</td>
+                <td>${u.name}</td>
+                <td>${u.email}</td>
+                <td>${userTransactions.length}</td>
+                <td>Rp ${formatRupiah(totalSpent)}</td>
+                <td>${u.role || 'user'}</td>
+                <td>
+                    ${u.role !== 'admin' ? `<button class="btn-delete" onclick="deleteUser(${u.id})">Hapus</button>` : ''}
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// Filter payments
+function filterPayments() {
+    const search = document.getElementById('searchPayment')?.value.toLowerCase() || '';
+    
+    const filtered = transactions.filter(t => 
+        t.paymentProof && 
+        t.status === 'pending' &&
+        (t.userName?.toLowerCase().includes(search) || 
+         t.id?.toLowerCase().includes(search))
+    );
+    
+    const grid = document.getElementById('paymentsGrid');
+    grid.innerHTML = filtered.map(t => `
+        <div class="payment-card" onclick="viewPaymentProof('${t.id}')">
+            <img src="${t.paymentProof}" alt="Bukti Pembayaran">
+            <div><strong>${t.userName}</strong></div>
+            <div>Rp ${formatRupiah(t.total)}</div>
+            <div class="transaction-status status-pending">Pending</div>
+        </div>
+    `).join('');
+    
+    if (filtered.length === 0) {
+        grid.innerHTML = '<p style="text-align: center; padding: 40px;">Tidak ada bukti pembayaran</p>';
+    }
+}
+
+// Show admin tab
+function showAdminTab(tab) {
+    // Update sidebar
+    document.querySelectorAll('.admin-menu a').forEach(a => a.classList.remove('active'));
+    event.target.closest('a').classList.add('active');
+    
+    // Show tab
+    document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(`tab-${tab}`).classList.add('active');
+    
+    // Load data if needed
+    if (tab === 'transactions') loadTransactions();
+    if (tab === 'payments') loadPayments();
+    if (tab === 'products') loadAdminProducts();
+    if (tab === 'users') loadUsers();
+}
+
+// Show notifications
+function showNotifications() {
+    const pending = transactions.filter(t => t.status === 'pending').length;
+    if (pending > 0) {
+        showToast('info', `Ada ${pending} transaksi pending`);
+        if (currentUser?.role === 'admin') {
+            openAdminDashboard();
+        }
+    } else {
+        showToast('info', 'Tidak ada notifikasi');
+    }
+}
+
+// Show user profile
+function showUserProfile() {
+    showToast('info', 'Fitur profil akan segera hadir');
+    document.getElementById('userMenu').classList.add('hidden');
+}
+
+// Show order history
+function showOrderHistory() {
+    const userTransactions = transactions.filter(t => t.userId === currentUser.id);
+    
+    if (userTransactions.length === 0) {
+        showToast('info', 'Belum ada riwayat transaksi');
+    } else {
+        let message = `Riwayat transaksi (${userTransactions.length}):\n`;
+        userTransactions.slice(0, 3).forEach(t => {
+            message += `- ${t.product.name}: ${t.status}\n`;
+        });
+        showToast('info', message);
+    }
+    
+    document.getElementById('userMenu').classList.add('hidden');
+}
+
+// Show voucher
+function showVoucher() {
+    showToast('info', 'Fitur voucher akan segera hadir');
+    document.getElementById('userMenu').classList.add('hidden');
+}
+
+// Show add promo modal
+function showAddPromoModal() {
+    openModal('promoModal');
+}
+
+// Save promo
+function savePromo(event) {
+    event.preventDefault();
+    
+    const promo = {
+        code: document.getElementById('promoCode').value.toUpperCase(),
+        discount: parseInt(document.getElementById('promoDiscount').value),
+        minPurchase: parseInt(document.getElementById('promoMin').value),
+        expiry: document.getElementById('promoExpiry').value
+    };
+    
+    promos.push(promo);
+    localStorage.setItem('promos', JSON.stringify(promos));
+    
+    closeModal('promoModal');
+    showToast('success', 'Promo berhasil ditambahkan!');
+}
+
+// Export report
+function exportReport(type) {
+    showToast('info', `Mengekspor laporan ${type}...`);
+}
+
+// Save settings
+function saveSettings() {
+    showToast('success', 'Pengaturan berhasil disimpan!');
+}
+
+// ============= UTILITY =============
+
+// Close modals when clicking outside
+window.onclick = function(event) {
+    if (event.target.classList.contains('modal')) {
+        event.target.classList.remove('show');
+    }
+}
 
 // Export functions
 window.openOrderModal = openOrderModal;
 window.handleLogin = handleLogin;
 window.handleRegister = handleRegister;
-window.handleOrder = handleOrder;
 window.openModal = openModal;
 window.closeModal = closeModal;
 window.switchModal = switchModal;
 window.scrollToProducts = scrollToProducts;
-window.logout = logout;
 window.toggleUserMenu = toggleUserMenu;
+window.toggleMenu = toggleMenu;
+window.logout = logout;
+window.selectPayment = selectPayment;
+window.submitOrder = submitOrder;
+window.updateFileName = updateFileName;
+window.applyPromo = applyPromo;
+window.openAdminDashboard = openAdminDashboard;
+window.showAdminTab = showAdminTab;
+window.showNotifications = showNotifications;
 window.showUserProfile = showUserProfile;
 window.showOrderHistory = showOrderHistory;
 window.showVoucher = showVoucher;
-window.handleEwalletSelection = handleEwalletSelection;
-window.verifyGameAccount = verifyGameAccount;
-window.processEwalletPayment = processEwalletPayment;
-window.selectWallet = selectWallet;
-window.updateStatsAfterTransaction = updateStatsAfterTransaction;
-window.viewAllActivities = viewAllActivities;
+window.showAddProductModal = showAddProductModal;
+window.editProduct = editProduct;
+window.saveProduct = saveProduct;
+window.deleteProduct = deleteProduct;
+window.viewTransaction = viewTransaction;
+window.viewPaymentProof = viewPaymentProof;
+window.updateTransactionStatus = updateTransactionStatus;
+window.filterTransactions = filterTransactions;
+window.filterUsers = filterUsers;
+window.filterPayments = filterPayments;
+window.filterAdminProducts = filterAdminProducts;
+window.showAddPromoModal = showAddPromoModal;
+window.savePromo = savePromo;
+window.exportReport = exportReport;
+window.saveSettings = saveSettings;
+
+// Auto refresh notifications
+setInterval(updateNotificationBadge, 5000);
