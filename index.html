@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Top Up Game Instant</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Top Up Game murah</title>
+    <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
@@ -13,11 +13,12 @@
         <div class="nav-container">
             <div class="logo">
                 <i class="fas fa-gem"></i>
-                <span>GameVault Store</span>
+                <span>WARUNG MURAH</span>
             </div>
             <div class="nav-menu" id="navMenu">
                 <a href="#home" class="nav-link active">Home</a>
                 <a href="#products" class="nav-link">Produk</a>
+                <a href="#vouchers" class="nav-link">Voucher</a>
                 <a href="#how-it-works" class="nav-link">Cara Order</a>
                 <a href="#promo" class="nav-link">Promo</a>
                 <a href="#contact" class="nav-link">Kontak</a>
@@ -37,7 +38,8 @@
                 <div class="user-menu hidden" id="userMenu">
                     <a href="#" onclick="showUserProfile()"><i class="fas fa-user"></i> Profil Saya</a>
                     <a href="#" onclick="showOrderHistory()"><i class="fas fa-history"></i> Riwayat Top Up</a>
-                    <a href="#" onclick="showVoucher()"><i class="fas fa-ticket-alt"></i> Voucher Saya</a>
+                    <a href="#" onclick="showUserVouchers()"><i class="fas fa-ticket-alt"></i> Voucher Saya <span class="badge" id="userVoucherCount">0</span></a>
+                    <a href="#" onclick="showAvailableVouchers()"><i class="fas fa-gift"></i> Klaim Voucher</a>
                     <a href="#" onclick="openAdminDashboard()" id="adminMenu" class="hidden"><i class="fas fa-shield-alt"></i> Admin Panel</a>
                     <a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
                 </div>
@@ -52,8 +54,8 @@
     <section class="hero" id="home">
         <div class="hero-container">
             <div class="hero-content">
-                <h1>Top Up Diamond <span class="gradient-text">Instant via DANA, GoPay & OVO</span></h1>
-                <p>Bayar pakai e-wallet favoritmu, diamond langsung masuk ke akun game secara otomatis! Proses real-time 24/7.</p>
+                <h1>Top Up Diamond & <span class="gradient-text">Klaim Voucher Diskon!</span></h1>
+                <p>Bayar pakai e-wallet favoritmu, diamond langsung masuk. Dapatkan voucher diskon setiap hari!</p>
                 <div class="hero-stats" id="liveStats">
                     <div class="stat-item">
                         <i class="fas fa-users"></i>
@@ -64,8 +66,8 @@
                         <span id="totalTransactions">8.923</span> Transaksi
                     </div>
                     <div class="stat-item">
-                        <i class="fas fa-gem"></i>
-                        <span id="totalDiamonds">456.789</span> Diamond
+                        <i class="fas fa-ticket-alt"></i>
+                        <span id="totalVouchers">156</span> Voucher
                     </div>
                 </div>
                 <div class="hero-ewallets">
@@ -101,22 +103,29 @@
         </div>
     </section>
 
+    <!-- Voucher Section -->
+    <section class="voucher-section" id="vouchers">
+        <div class="container">
+            <h2 class="section-title">Voucher Spesial Untukmu!</h2>
+            <p class="section-subtitle">Klaim voucher dan dapatkan diskon menarik</p>
+            
+            <div class="voucher-grid" id="voucherGrid">
+                <!-- Vouchers will be loaded here -->
+            </div>
+        </div>
+    </section>
+
     <!-- Promo Section -->
     <section class="promo-section" id="promo">
         <div class="container">
             <div class="promo-box">
                 <div class="promo-content">
                     <i class="fas fa-tag"></i>
-                    <h3>Punya Kode Promo?</h3>
-                    <p>Masukkan kode promo untuk mendapatkan diskon spesial!</p>
-                    <div class="promo-terms">
-                        <small><i class="fas fa-check-circle"></i> Min. Rp 20.000</small>
-                        <small><i class="fas fa-check-circle"></i> 1x pakai</small>
-                        <small><i class="fas fa-check-circle"></i> Semua game</small>
-                    </div>
+                    <h3>Punya Kode Promo atau Voucher?</h3>
+                    <p>Masukkan kode untuk mendapatkan diskon spesial!</p>
                 </div>
                 <div class="promo-input-group">
-                    <input type="text" id="promoCode" placeholder="Code bisa lihat di tiktok admin" class="promo-input">
+                    <input type="text" id="promoCode" placeholder="Contoh: VOUCHER10" class="promo-input">
                     <button class="btn-apply-promo" onclick="applyPromo()">Apply</button>
                 </div>
                 <div class="promo-message" id="promoMessage"></div>
@@ -127,8 +136,8 @@
     <!-- How It Works -->
     <section class="how-it-works" id="how-it-works">
         <div class="container">
-            <h2 class="section-title">Cara Order</h2>
-            <p class="section-subtitle">Hanya 3 langkah mudah untuk top up diamond</p>
+            <h2 class="section-title">Cara Order & Klaim Voucher</h2>
+            <p class="section-subtitle">Hanya 4 langkah mudah</p>
             
             <div class="steps">
                 <div class="step-card">
@@ -139,12 +148,18 @@
                 </div>
                 <div class="step-card">
                     <div class="step-number">2</div>
+                    <i class="fas fa-ticket-alt"></i>
+                    <h3>Klaim Voucher</h3>
+                    <p>Ambil voucher diskon yang tersedia</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">3</div>
                     <i class="fas fa-wallet"></i>
                     <h3>Bayar via E-Wallet</h3>
                     <p>Transfer ke nomor 0822-1075-6431 a.n Benoy</p>
                 </div>
                 <div class="step-card">
-                    <div class="step-number">3</div>
+                    <div class="step-number">4</div>
                     <i class="fas fa-check-circle"></i>
                     <h3>Diamond Langsung Masuk</h3>
                     <p>Diamond masuk ke akun game dalam 1-30 menit</p>
@@ -165,7 +180,7 @@
                         <i class="fab fa-whatsapp"></i>
                         <div>
                             <h4>WhatsApp Admin</h4>
-                            <p>chat yang penting(Benoy)</p>
+                            <p>+62 822-1075-6431 (Benoy)</p>
                             <a href="https://wa.me/6282210756431" class="btn-wa" target="_blank">Chat Admin</a>
                         </div>
                     </div>
@@ -273,6 +288,13 @@
                     <input type="text" id="zoneId" placeholder="Masukkan Zone ID (opsional)">
                 </div>
                 
+                <!-- Voucher Info -->
+                <div class="voucher-info-box hidden" id="voucherInfoBox">
+                    <i class="fas fa-ticket-alt"></i>
+                    <span id="voucherAppliedInfo"></span>
+                    <button class="btn-remove-voucher" onclick="removeVoucher()">✕</button>
+                </div>
+                
                 <div class="form-group">
                     <label>Pilih Metode Pembayaran</label>
                     <div class="payment-options">
@@ -329,7 +351,7 @@
 
                 <!-- QRIS Display -->
                 <div class="qris-display hidden" id="qrisDisplay">
-                    <img src="https://cdn.phototourl.com/uploads/2026-02-22-27459f52-b67a-4d7e-ad78-7e47b61b4ea7.png" alt="QRIS">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=082210756431" alt="QRIS">
                     <p>Scan dengan DANA/OVO/GoPay</p>
                     <p class="small">Nomor: 0822 1075 6431 a.n Benoy</p>
                 </div>
@@ -355,6 +377,10 @@
                     <div class="summary-row">
                         <span>Biaya Layanan</span>
                         <span>Rp 1.000</span>
+                    </div>
+                    <div class="summary-row discount-row hidden" id="discountRow">
+                        <span>Diskon Voucher</span>
+                        <span id="discountAmount">-Rp 0</span>
                     </div>
                     <div class="summary-row total">
                         <span>Total</span>
@@ -397,6 +423,9 @@
                         </a>
                         <a href="#" onclick="showAdminTab('products')">
                             <i class="fas fa-box"></i> Kelola Produk
+                        </a>
+                        <a href="#" onclick="showAdminTab('vouchers')">
+                            <i class="fas fa-ticket-alt"></i> Kelola Voucher
                         </a>
                         <a href="#" onclick="showAdminTab('users')">
                             <i class="fas fa-users"></i> Pengguna
@@ -444,10 +473,10 @@
                                 </div>
                             </div>
                             <div class="stat-card">
-                                <i class="fas fa-money-bill"></i>
+                                <i class="fas fa-ticket-alt"></i>
                                 <div class="stat-info">
-                                    <h3 id="dashboardRevenue">Rp 189.750.000</h3>
-                                    <p>Pendapatan</p>
+                                    <h3 id="dashboardVouchers">156</h3>
+                                    <p>Voucher Terpakai</p>
                                 </div>
                             </div>
                         </div>
@@ -528,6 +557,36 @@
                         </div>
                     </div>
 
+                    <!-- Vouchers Tab -->
+                    <div class="admin-tab" id="tab-vouchers">
+                        <div class="tab-header">
+                            <h2>Kelola Voucher</h2>
+                            <button class="btn-add" onclick="showAddVoucherModal()">
+                                <i class="fas fa-plus"></i> Tambah Voucher
+                            </button>
+                        </div>
+                        
+                        <div class="vouchers-table">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Kode</th>
+                                        <th>Nama</th>
+                                        <th>Diskon</th>
+                                        <th>Min. Belanja</th>
+                                        <th>Game</th>
+                                        <th>Klaim</th>
+                                        <th>Sisa</th>
+                                        <th>Status</th>
+                                        <th>Expiry</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="vouchersList"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
                     <!-- Users Tab -->
                     <div class="admin-tab" id="tab-users">
                         <div class="tab-header">
@@ -543,6 +602,7 @@
                                         <th>Email</th>
                                         <th>Transaksi</th>
                                         <th>Total Belanja</th>
+                                        <th>Voucher</th>
                                         <th>Role</th>
                                         <th>Aksi</th>
                                     </tr>
@@ -668,6 +728,65 @@
                     </select>
                 </div>
                 <button type="submit" class="btn-submit">Simpan Produk</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Tambah/Edit Voucher -->
+    <div class="modal" id="voucherModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="voucherModalTitle">Tambah Voucher</h3>
+                <button class="modal-close" onclick="closeModal('voucherModal')">&times;</button>
+            </div>
+            <form onsubmit="saveVoucher(event)">
+                <input type="hidden" id="voucherId">
+                <div class="form-group">
+                    <label>Kode Voucher</label>
+                    <input type="text" id="voucherCode" required placeholder="Contoh: VOUCHER10">
+                </div>
+                <div class="form-group">
+                    <label>Nama Voucher</label>
+                    <input type="text" id="voucherName" required placeholder="Contoh: Diskon 10%">
+                </div>
+                <div class="form-group">
+                    <label>Deskripsi</label>
+                    <textarea id="voucherDescription" rows="2" placeholder="Deskripsi voucher"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Diskon (%)</label>
+                    <input type="number" id="voucherDiscount" required min="1" max="100">
+                </div>
+                <div class="form-group">
+                    <label>Minimal Pembelian (Rp)</label>
+                    <input type="number" id="voucherMinPurchase" required min="0" step="1000" value="20000">
+                </div>
+                <div class="form-group">
+                    <label>Tipe</label>
+                    <select id="voucherType" required>
+                        <option value="discount">Diskon Langsung</option>
+                        <option value="cashback">Cashback</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Khusus Game</label>
+                    <select id="voucherForGame">
+                        <option value="all">Semua Game</option>
+                        <option value="ml">Mobile Legends</option>
+                        <option value="ff">Free Fire</option>
+                        <option value="pubg">PUBG Mobile</option>
+                        <option value="cod">COD Mobile</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Maksimal Klaim</label>
+                    <input type="number" id="voucherMaxClaims" required min="1" value="100">
+                </div>
+                <div class="form-group">
+                    <label>Tanggal Kadaluarsa</label>
+                    <input type="date" id="voucherExpiry" required>
+                </div>
+                <button type="submit" class="btn-submit">Simpan Voucher</button>
             </form>
         </div>
     </div>
