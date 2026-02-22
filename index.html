@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DiamondStore - Top Up Instant dengan DANA, GoPay & OVO</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <i class="fas fa-gem"></i>
+                <span>DiamondStore</span>
+            </div>
+            <div class="nav-menu" id="navMenu">
+                <a href="#home" class="nav-link active">Home</a>
+                <a href="#products" class="nav-link">Products</a>
+                <a href="#how-it-works" class="nav-link">Cara Order</a>
+                <a href="#promo" class="nav-link">Promo</a>
+                <a href="#stats" class="nav-link">Statistik</a>
+                <a href="#contact" class="nav-link">Kontak</a>
+            </div>
+            <div class="nav-actions">
+                <button class="btn-notification" id="notificationBtn">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge">3</span>
+                </button>
+                <button class="btn-login" id="loginBtn">Login</button>
+                <button class="btn-register" id="registerBtn">Register</button>
+                <div class="user-profile hidden" id="userProfile" onclick="toggleUserMenu()">
+                    <img src="https://ui-avatars.com/api/?name=User&background=6366f1&color=fff" alt="Profile">
+                    <span id="usernameDisplay">User</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="user-menu hidden" id="userMenu">
+                    <a href="#" onclick="showUserProfile()"><i class="fas fa-user"></i> Profil Saya</a>
+                    <a href="#" onclick="showOrderHistory()"><i class="fas fa-history"></i> Riwayat Top Up</a>
+                    <a href="#" onclick="showVoucher()"><i class="fas fa-ticket-alt"></i> Voucher Saya</a>
+                    <a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                </div>
+                <div class="menu-toggle" id="menuToggle">
+                    <i class="fas fa-bars"></i>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="hero-container">
+            <div class="hero-content">
+                <h1>Top Up Diamond <span class="gradient-text">Instant via DANA, GoPay & OVO</span></h1>
+                <p>Bayar pakai e-wallet favoritmu, diamond langsung masuk ke akun game secara otomatis! Proses real-time 24/7.</p>
+                <div class="hero-stats" id="liveStats">
+                    <div class="stat-item">
+                        <i class="fas fa-users"></i>
+                        <span id="totalUsers">0</span> Pengguna Aktif
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span id="totalTransactions">0</span> Transaksi
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-gem"></i>
+                        <span id="totalDiamonds">0</span> Diamond Terjual
+                    </div>
+                </div>
+                <div class="hero-ewallets">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/5c/Ovo_logo.svg" alt="OVO" class="ewallet-logo">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/9/9a/GoPay_logo.svg" alt="GoPay" class="ewallet-logo">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/7/7a/DANA_logo.svg" alt="DANA" class="ewallet-logo">
+                </div>
+                <button class="btn-order-now" onclick="scrollToProducts()">Top Up Sekarang</button>
+            </div>
+            <div class="hero-image">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Ccircle cx='100' cy='100' r='80' fill='%236366f1' opacity='0.2'/%3E%3Ccircle cx='100' cy='100' r='60' fill='%238b5cf6' opacity='0.3'/%3E%3Ccircle cx='100' cy='100' r='40' fill='%23a855f7' opacity='0.4'/%3E%3C/svg%3E" alt="Diamond">
+            </div>
+        </div>
+    </section>
+
+    <!-- Products Section -->
+    <section class="products" id="products">
+        <div class="container">
+            <h2 class="section-title">Pilih Paket Diamond</h2>
+            <p class="section-subtitle">Berbagai pilihan diamond dengan harga terbaik</p>
+            
+            <div class="product-filters">
+                <button class="filter-btn active" data-game="all">Semua Game</button>
+                <button class="filter-btn" data-game="ml">Mobile Legends</button>
+                <button class="filter-btn" data-game="ff">Free Fire</button>
+                <button class="filter-btn" data-game="pubg">PUBG Mobile</button>
+                <button class="filter-btn" data-game="cod">COD Mobile</button>
+            </div>
+
+            <div class="product-grid" id="productGrid">
+                <!-- Products will be loaded here via JavaScript -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Promo Code Section -->
+    <section class="promo-section" id="promo">
+        <div class="container">
+            <div class="promo-box">
+                <div class="promo-content">
+                    <i class="fas fa-tag"></i>
+                    <h3>Punya Kode Promo? 
+                        <span class="promo-info-tooltip" data-tooltip="Min. pembelian Rp 20.000 & berlaku sekali pakai">
+                            <i class="fas fa-question-circle"></i>
+                        </span>
+                    </h3>
+                    <p>Masukkan kode promo untuk mendapatkan diskon spesial!</p>
+                    <div class="promo-terms">
+                        <small><i class="fas fa-check-circle"></i> Minimal pembelian Rp 20.000</small>
+                        <small><i class="fas fa-check-circle"></i> Hanya bisa digunakan 1 kali</small>
+                        <small><i class="fas fa-check-circle"></i> Berlaku untuk semua game</small>
+                    </div>
+                </div>
+                <div class="promo-input-group">
+                    <input type="text" id="promoCode" placeholder="Contoh: WELCOME10" class="promo-input">
+                    <button class="btn-apply-promo" id="applyPromoBtn">Apply</button>
+                </div>
+                <div class="promo-message" id="promoMessage"></div>
+            </div>
+            
+            <!-- Available Promos Display -->
+            <div class="promo-stats">
+                <h4>Promo Tersedia <span class="promo-badge">Sekali Pakai</span></h4>
+                <div class="promo-stats-grid">
+                    <div class="promo-stat-item">
+                        <div class="promo-stat-value">WELCOME10</div>
+                        <div class="promo-stat-label">Diskon 10%</div>
+                    </div>
+                    <div class="promo-stat-item">
+                        <div class="promo-stat-value">DIAMOND20</div>
+                        <div class="promo-stat-label">Diskon 20%</div>
+                    </div>
+                    <div class="promo-stat-item">
+                        <div class="promo-stat-value">NEWUSER30</div>
+                        <div class="promo-stat-label">Diskon 30%</div>
+                    </div>
+                    <div class="promo-stat-item">
+                        <div class="promo-stat-value">FLASHSALE25</div>
+                        <div class="promo-stat-label">Diskon 25%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="how-it-works" id="how-it-works">
+        <div class="container">
+            <h2 class="section-title">Cara Order</h2>
+            <p class="section-subtitle">Hanya 3 langkah mudah untuk top up diamond</p>
+            
+            <div class="steps">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <i class="fas fa-gamepad"></i>
+                    <h3>Pilih Game & Paket</h3>
+                    <p>Pilih game favoritmu dan tentukan jumlah diamond yang diinginkan</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <i class="fas fa-credit-card"></i>
+                    <h3>Masukkan ID & Pilih E-Wallet</h3>
+                    <p>Masukkan User ID game dan pilih DANA/GoPay/OVO untuk pembayaran instan</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <i class="fas fa-check-circle"></i>
+                    <h3>Diamond Langsung Masuk</h3>
+                    <p>Setelah pembayaran berhasil, diamond akan langsung masuk ke akun game-mu secara otomatis!</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Live Statistics -->
+    <section class="live-stats" id="stats">
+        <div class="container">
+            <h2 class="section-title">Statistik Live</h2>
+            <p class="section-subtitle">Data real-time pengguna dan transaksi</p>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <i class="fas fa-users"></i>
+                    <div class="stat-number" id="liveUserCount">0</div>
+                    <div class="stat-label">Total Pengguna</div>
+                    <div class="stat-trend" id="userTrend">+12 hari ini</div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-shopping-cart"></i>
+                    <div class="stat-number" id="liveTransactionCount">0</div>
+                    <div class="stat-label">Total Transaksi</div>
+                    <div class="stat-trend" id="transactionTrend">+45 hari ini</div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-gem"></i>
+                    <div class="stat-number" id="liveDiamondCount">0</div>
+                    <div class="stat-label">Diamond Terjual</div>
+                    <div class="stat-trend" id="diamondTrend">+2.5K hari ini</div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-wallet"></i>
+                    <div class="stat-number" id="liveRevenue">Rp 0</div>
+                    <div class="stat-label">Total Revenue</div>
+                    <div class="stat-trend" id="revenueTrend">+15% bulan ini</div>
+                </div>
+            </div>
+
+            <!-- Recent Activities -->
+            <div class="recent-activities">
+                <h3>Aktivitas Terbaru</h3>
+                <div class="activity-list" id="activityList">
+                    <!-- Activities will be loaded here -->
+                </div>
+                <button class="btn-view-all" onclick="viewAllActivities()">Lihat Semua Aktivitas</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- User Rankings -->
+    <section class="user-rankings">
+        <div class="container">
+            <h2 class="section-title">Top Spender Bulan Ini</h2>
+            <p class="section-subtitle">Pengguna dengan top up terbanyak</p>
+            
+            <div class="ranking-list" id="rankingList">
+                <!-- Rankings will be loaded here -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section class="testimonials">
+        <div class="container">
+            <h2 class="section-title">Apa Kata Pelanggan?</h2>
+            <p class="section-subtitle">Lebih dari 1000+ ulasan positif dari pelanggan setia</p>
+            
+            <div class="testimonial-grid" id="testimonialList">
+                <!-- Testimonials will be loaded here -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Supported E-Wallets -->
+    <section class="supported-wallets">
+        <div class="container">
+            <h2 class="section-title">Didukung oleh E-Wallet Terkemuka</h2>
+            <p class="section-subtitle">Pembayaran instan dengan DANA, GoPay, dan OVO</p>
+            
+            <div class="wallets-grid">
+                <div class="wallet-card" data-wallet="dana" onclick="selectWallet('dana')">
+                    <i class="fas fa-wallet wallet-icon dana"></i>
+                    <h4>DANA</h4>
+                    <p>Instant Payment</p>
+                    <span class="wallet-badge">Most Popular</span>
+                </div>
+                <div class="wallet-card" data-wallet="gopay" onclick="selectWallet('gopay')">
+                    <i class="fas fa-wallet wallet-icon gopay"></i>
+                    <h4>GoPay</h4>
+                    <p>Instant Payment</p>
+                    <span class="wallet-badge">Fastest</span>
+                </div>
+                <div class="wallet-card" data-wallet="ovo" onclick="selectWallet('ovo')">
+                    <i class="fas fa-wallet wallet-icon ovo"></i>
+                    <h4>OVO</h4>
+                    <p>Instant Payment</p>
+                    <span class="wallet-badge">Many Promo</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="contact" id="contact">
+        <div class="container">
+            <h2 class="section-title">Hubungi Kami</h2>
+            <p class="section-subtitle">Ada pertanyaan? Kami siap membantu 24/7</p>
+            
+            <div class="contact-container">
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <i class="fab fa-whatsapp"></i>
+                        <div>
+                            <h4>WhatsApp</h4>
+                            <p>+62 812-3456-7890</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fab fa-telegram"></i>
+                        <div>
+                            <h4>Telegram</h4>
+                            <p>@diamondstore_admin</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-envelope"></i>
+                        <div>
+                            <h4>Email</h4>
+                            <p>support@diamondstore.com</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-clock"></i>
+                        <div>
+                            <h4>Jam Operasional</h4>
+                            <p>24 Jam Non-stop</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="contact-social">
+                    <h3>Ikuti Kami</h3>
+                    <div class="social-icons">
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-tiktok"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <i class="fas fa-gem"></i>
+                    <span>DiamondStore</span>
+                </div>
+                <p>Top up diamond game termurah, tercepat, dan terpercaya di Indonesia.</p>
+                <div class="footer-stats">
+                    <span><i class="fas fa-users"></i> <span id="footerUserCount">0</span> Pengguna</span>
+                    <span><i class="fas fa-shopping-cart"></i> <span id="footerTransactionCount">0</span> Transaksi</span>
+                    <span><i class="fas fa-gem"></i> <span id="footerDiamondCount">0</span> Diamond</span>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 DiamondStore. All rights reserved. | Versi 2.0.0</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Modal Login -->
+    <div class="modal" id="loginModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Login</h3>
+                <button class="modal-close" onclick="closeModal('loginModal')">&times;</button>
+            </div>
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" required placeholder="Masukkan email">
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" required placeholder="Masukkan password">
+                </div>
+                <button type="submit" class="btn-submit">Login</button>
+            </form>
+            <p class="modal-footer-text">Belum punya akun? <a href="#" onclick="switchModal('register')">Register</a></p>
+        </div>
+    </div>
+
+    <!-- Modal Register -->
+    <div class="modal" id="registerModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Register</h3>
+                <button class="modal-close" onclick="closeModal('registerModal')">&times;</button>
+            </div>
+            <form id="registerForm" onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label for="registerName">Nama Lengkap</label>
+                    <input type="text" id="registerName" required placeholder="Masukkan nama lengkap">
+                </div>
+                <div class="form-group">
+                    <label for="registerEmail">Email</label>
+                    <input type="email" id="registerEmail" required placeholder="Masukkan email">
+                </div>
+                <div class="form-group">
+                    <label for="registerPassword">Password</label>
+                    <input type="password" id="registerPassword" required placeholder="Minimal 6 karakter">
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">Konfirmasi Password</label>
+                    <input type="password" id="confirmPassword" required placeholder="Konfirmasi password">
+                </div>
+                <div class="form-group">
+                    <label for="referralCode">Kode Referral (Opsional)</label>
+                    <input type="text" id="referralCode" placeholder="Masukkan kode referral">
+                </div>
+                <button type="submit" class="btn-submit">Register</button>
+            </form>
+            <p class="modal-footer-text">Sudah punya akun? <a href="#" onclick="switchModal('login')">Login</a></p>
+        </div>
+    </div>
+
+    <!-- Modal Order dengan Auto Top Up -->
+    <div class="modal" id="orderModal">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h3>Auto Top Up Diamond</h3>
+                <button class="modal-close" onclick="closeModal('orderModal')">&times;</button>
+            </div>
+            <form id="orderForm" onsubmit="handleOrder(event)">
+                <div class="order-detail-product" id="orderProductDetail">
+                    <!-- Product details will be filled by JavaScript -->
+                </div>
+                
+                <div class="form-group">
+                    <label for="gameId">User ID Game</label>
+                    <input type="text" id="gameId" required placeholder="Masukkan User ID (contoh: 12345678)">
+                    <small class="form-text">Pastikan ID yang dimasukkan benar untuk pengiriman otomatis</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="zoneId">Zone ID (Jika ada)</label>
+                    <input type="text" id="zoneId" placeholder="Masukkan Zone ID (opsional)">
+                </div>
+                
+                <!-- Metode Pembayaran 3 E-Wallet -->
+                <div class="form-group">
+                    <label for="paymentMethod">Pilih E-Wallet untuk Auto Top Up</label>
+                    <select id="paymentMethod" required onchange="handleEwalletSelection()">
+                        <option value="">Pilih e-wallet</option>
+                        <option value="dana" class="payment-option-dana">💙 DANA - Instant</option>
+                        <option value="gopay" class="payment-option-gopay">💚 GoPay - Instant</option>
+                        <option value="ovo" class="payment-option-ovo">💜 OVO - Instant</option>
+                    </select>
+                </div>
+
+                <!-- E-Wallet Payment Interface -->
+                <div class="ewallet-payment-container hidden" id="ewalletPaymentContainer">
+                    <div class="ewallet-payment-header" id="ewalletHeader">
+                        <i class="fas fa-bolt"></i>
+                        <h4>Auto Top Up via <span id="selectedEwalletName">E-Wallet</span></h4>
+                    </div>
+                    
+                    <div class="payment-flow">
+                        <!-- Step 1: Verification -->
+                        <div class="payment-step active" id="step1">
+                            <div class="step-indicator">1</div>
+                            <div class="step-content">
+                                <h5>Verifikasi Akun Game</h5>
+                                <p>Memeriksa ketersediaan akun <span id="gameName">Mobile Legends</span>...</p>
+                                <div class="verification-status" id="verificationStatus">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                    <span>Menunggu verifikasi</span>
+                                </div>
+                                <button type="button" class="btn-verify" onclick="verifyGameAccount()" id="verifyBtn">
+                                    Verifikasi Sekarang
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Step 2: Payment -->
+                        <div class="payment-step" id="step2">
+                            <div class="step-indicator">2</div>
+                            <div class="step-content">
+                                <h5>Pembayaran via <span id="paymentEwalletName">E-Wallet</span></h5>
+                                <div class="payment-details">
+                                    <div class="total-payment">
+                                        <span>Total Pembayaran:</span>
+                                        <strong id="paymentTotal">Rp 0</strong>
+                                    </div>
+                                    <button type="button" class="btn-pay-ewallet" onclick="processEwalletPayment()" id="payBtn">
+                                        <i class="fas fa-wallet"></i>
+                                        Bayar dengan <span id="payEwalletName">E-Wallet</span>
+                                    </button>
+                                    <p class="payment-note">
+                                        <i class="fas fa-info-circle"></i>
+                                        Anda akan diarahkan ke aplikasi <span id="redirectEwalletName">E-Wallet</span> untuk menyelesaikan pembayaran
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Step 3: Processing -->
+                        <div class="payment-step" id="step3">
+                            <div class="step-indicator">3</div>
+                            <div class="step-content">
+                                <h5>Memproses Top Up</h5>
+                                <div class="processing-animation">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                    <p>Diamond sedang dikirim ke akun Anda...</p>
+                                </div>
+                                <div class="processing-detail hidden" id="processingDetail">
+                                    <p><i class="fas fa-check-circle"></i> Pembayaran berhasil!</p>
+                                    <p><i class="fas fa-gamepad"></i> Mengirim diamond ke: <span id="processingGameId"></span></p>
+                                    <p><i class="fas fa-gem"></i> Paket: <span id="processingProduct"></span></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Step 4: Success -->
+                        <div class="payment-step" id="step4">
+                            <div class="step-indicator">4</div>
+                            <div class="step-content">
+                                <h5>Top Up Berhasil!</h5>
+                                <div class="success-animation">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="success-details">
+                                    <p><strong>Diamond telah masuk ke akun game Anda!</strong></p>
+                                    <p>ID Game: <span id="successGameId"></span></p>
+                                    <p>Paket: <span id="successProduct"></span></p>
+                                    <p>Jumlah: <span id="successDiamond"></span> Diamond</p>
+                                    <p>Waktu: <span id="successTime"></span></p>
+                                </div>
+                                <button type="button" class="btn-play-game" onclick="closeModal('orderModal'); updateStatsAfterTransaction();">
+                                    <i class="fas fa-gamepad"></i>
+                                    Mainkan Game
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hidden field untuk bukti pembayaran (akan diisi otomatis) -->
+                <input type="hidden" id="paymentProof" value="auto_payment">
+                <input type="hidden" id="paymentStatus" value="pending">
+                
+                <div class="order-summary">
+                    <h4>Ringkasan Pesanan</h4>
+                    <div class="summary-row">
+                        <span>Harga Produk</span>
+                        <span id="productPrice">Rp 0</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Biaya Layanan</span>
+                        <span>Rp 1.000</span>
+                    </div>
+                    <div class="summary-row discount-row hidden" id="discountRow">
+                        <span>Diskon Promo</span>
+                        <span id="discountAmount">-Rp 0</span>
+                    </div>
+                    <div class="summary-row total">
+                        <span>Total Pembayaran</span>
+                        <span id="totalPayment">Rp 1.000</span>
+                    </div>
+                </div>
+                
+                <!-- Tombol submit akan muncul hanya jika bukan auto top up -->
+                <button type="submit" class="btn-submit hidden" id="submitOrderBtn">Kirim Pesanan ke Admin</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal User Profile -->
+    <div class="modal" id="profileModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Profil Saya</h3>
+                <button class="modal-close" onclick="closeModal('profileModal')">&times;</button>
+            </div>
+            <div class="profile-content" id="profileContent">
+                <!-- Profile content will be filled by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Order History -->
+    <div class="modal" id="historyModal">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h3>Riwayat Top Up</h3>
+                <button class="modal-close" onclick="closeModal('historyModal')">&times;</button>
+            </div>
+            <div class="history-content" id="historyContent">
+                <!-- History content will be filled by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
