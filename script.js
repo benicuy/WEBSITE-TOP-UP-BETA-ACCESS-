@@ -45,8 +45,8 @@ function loadData() {
             { 
                 id: 1, 
                 name: 'Admin Benoy', 
-                email: 'admin@benoystore.com', 
-                password: 'admin123', 
+                email: 'admin@warungmurah.com', 
+                password: 'warungmurah123', 
                 role: 'admin',
                 vouchers: [],
                 createdAt: new Date().toISOString()
