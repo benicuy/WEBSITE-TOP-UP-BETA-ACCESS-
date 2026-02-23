@@ -45,8 +45,8 @@ function loadData() {
             { 
                 id: 1, 
                 name: 'Admin Benoy', 
-                email: 'admin@warungmurah.com', 
-                password: 'warungmurah123', 
+                email: 'admin@benoystore.com', 
+                password: 'admin123', 
                 role: 'admin',
                 vouchers: [],
                 createdAt: new Date().toISOString()
@@ -64,23 +64,73 @@ function loadData() {
         localStorage.setItem('users', JSON.stringify(users));
     }
     
-    // Load products
+    // Load products with HIGH PRICE support
     const savedProducts = localStorage.getItem('products');
     if (savedProducts) {
         products = JSON.parse(savedProducts);
         console.log('Products loaded:', products.length);
     } else {
-        console.log('No products found, creating default products...');
+        console.log('No products found, creating default products with high prices...');
         products = [
+            // Mobile Legends - Paket Besar
             { id: 1, game: 'ml', name: '86 Diamonds', diamond: 86, price: 17000, bonus: '', status: 'active' },
             { id: 2, game: 'ml', name: '172 Diamonds', diamond: 172, price: 33000, bonus: '', status: 'active' },
             { id: 3, game: 'ml', name: '257 Diamonds', diamond: 257, price: 48000, bonus: '', status: 'active' },
-            { id: 4, game: 'ff', name: '70 Diamonds', diamond: 70, price: 12000, bonus: '', status: 'active' },
-            { id: 5, game: 'ff', name: '140 Diamonds', diamond: 140, price: 23000, bonus: '', status: 'active' },
-            { id: 6, game: 'pubg', name: '60 UC', diamond: 60, price: 17000, bonus: '', status: 'active' },
-            { id: 7, game: 'pubg', name: '180 UC', diamond: 180, price: 48000, bonus: '+25 Bonus', status: 'active' },
-            { id: 8, game: 'cod', name: '80 CP', diamond: 80, price: 19000, bonus: '', status: 'active' },
-            { id: 9, game: 'cod', name: '220 CP', diamond: 220, price: 50000, bonus: '+25 Bonus', status: 'active' }
+            { id: 4, game: 'ml', name: '344 Diamonds', diamond: 344, price: 64000, bonus: '', status: 'active' },
+            { id: 5, game: 'ml', name: '429 Diamonds', diamond: 429, price: 79000, bonus: '', status: 'active' },
+            { id: 6, game: 'ml', name: '514 Diamonds', diamond: 514, price: 95000, bonus: '', status: 'active' },
+            { id: 7, game: 'ml', name: '600 Diamonds', diamond: 600, price: 110000, bonus: '', status: 'active' },
+            { id: 8, game: 'ml', name: '706 Diamonds', diamond: 706, price: 129000, bonus: '', status: 'active' },
+            { id: 9, game: 'ml', name: '878 Diamonds', diamond: 878, price: 160000, bonus: '', status: 'active' },
+            { id: 10, game: 'ml', name: '1050 Diamonds', diamond: 1050, price: 190000, bonus: '', status: 'active' },
+            { id: 11, game: 'ml', name: '2195 Diamonds', diamond: 2195, price: 395000, bonus: '', status: 'active' },
+            { id: 12, game: 'ml', name: '3688 Diamonds', diamond: 3688, price: 660000, bonus: '', status: 'active' },
+            { id: 13, game: 'ml', name: '5532 Diamonds', diamond: 5532, price: 990000, bonus: '', status: 'active' },
+            { id: 14, game: 'ml', name: '9288 Diamonds', diamond: 9288, price: 1650000, bonus: '', status: 'active' },
+            
+            // Paket Jumbo (hingga 100 juta)
+            { id: 15, game: 'ml', name: 'Starlight+ Pass', diamond: 2000, price: 2500000, bonus: 'Starlight Member', status: 'active' },
+            { id: 16, game: 'ml', name: 'Twilight Pass', diamond: 3000, price: 5000000, bonus: 'Exclusive Skin', status: 'active' },
+            { id: 17, game: 'ml', name: 'Collector Pack', diamond: 5000, price: 10000000, bonus: 'Collector Skin', status: 'active' },
+            { id: 18, game: 'ml', name: 'Legend Skin Pack', diamond: 10000, price: 25000000, bonus: 'Legend Skin', status: 'active' },
+            { id: 19, game: 'ml', name: 'Ultimate Bundle', diamond: 20000, price: 50000000, bonus: 'All Skins', status: 'active' },
+            { id: 20, game: 'ml', name: 'Mythic Pack', diamond: 50000, price: 100000000, bonus: 'Mythic Set', status: 'active' },
+            
+            // Free Fire - Paket Besar
+            { id: 21, game: 'ff', name: '70 Diamonds', diamond: 70, price: 12000, bonus: '', status: 'active' },
+            { id: 22, game: 'ff', name: '140 Diamonds', diamond: 140, price: 23000, bonus: '', status: 'active' },
+            { id: 23, game: 'ff', name: '355 Diamonds', diamond: 355, price: 57000, bonus: '', status: 'active' },
+            { id: 24, game: 'ff', name: '720 Diamonds', diamond: 720, price: 114000, bonus: '', status: 'active' },
+            { id: 25, game: 'ff', name: '1000 Diamonds', diamond: 1000, price: 158000, bonus: '', status: 'active' },
+            { id: 26, game: 'ff', name: '2000 Diamonds', diamond: 2000, price: 315000, bonus: '', status: 'active' },
+            { id: 27, game: 'ff', name: '4000 Diamonds', diamond: 4000, price: 625000, bonus: '', status: 'active' },
+            { id: 28, game: 'ff', name: '8000 Diamonds', diamond: 8000, price: 1250000, bonus: '', status: 'active' },
+            { id: 29, game: 'ff', name: '15000 Diamonds', diamond: 15000, price: 2350000, bonus: '', status: 'active' },
+            { id: 30, game: 'ff', name: '30000 Diamonds', diamond: 30000, price: 4700000, bonus: '', status: 'active' },
+            { id: 31, game: 'ff', name: '50000 Diamonds', diamond: 50000, price: 7850000, bonus: '', status: 'active' },
+            { id: 32, game: 'ff', name: '100000 Diamonds', diamond: 100000, price: 15700000, bonus: '', status: 'active' },
+            
+            // PUBG Mobile - Paket Besar
+            { id: 33, game: 'pubg', name: '60 UC', diamond: 60, price: 17000, bonus: '', status: 'active' },
+            { id: 34, game: 'pubg', name: '180 UC', diamond: 180, price: 48000, bonus: '+25 Bonus', status: 'active' },
+            { id: 35, game: 'pubg', name: '325 UC', diamond: 325, price: 85000, bonus: '+60 Bonus', status: 'active' },
+            { id: 36, game: 'pubg', name: '385 UC', diamond: 385, price: 100000, bonus: '+65 Bonus', status: 'active' },
+            { id: 37, game: 'pubg', name: '500 UC', diamond: 500, price: 129000, bonus: '+115 Bonus', status: 'active' },
+            { id: 38, game: 'pubg', name: '660 UC', diamond: 660, price: 170000, bonus: '+150 Bonus', status: 'active' },
+            { id: 39, game: 'pubg', name: '1000 UC', diamond: 1000, price: 255000, bonus: '+300 Bonus', status: 'active' },
+            { id: 40, game: 'pubg', name: '2000 UC', diamond: 2000, price: 505000, bonus: '+700 Bonus', status: 'active' },
+            { id: 41, game: 'pubg', name: '5000 UC', diamond: 5000, price: 1250000, bonus: '+1800 Bonus', status: 'active' },
+            { id: 42, game: 'pubg', name: '10000 UC', diamond: 10000, price: 2500000, bonus: '+4000 Bonus', status: 'active' },
+            
+            // COD Mobile - Paket Besar
+            { id: 43, game: 'cod', name: '80 CP', diamond: 80, price: 19000, bonus: '', status: 'active' },
+            { id: 44, game: 'cod', name: '220 CP', diamond: 220, price: 50000, bonus: '+25 Bonus', status: 'active' },
+            { id: 45, game: 'cod', name: '440 CP', diamond: 440, price: 99000, bonus: '+50 Bonus', status: 'active' },
+            { id: 46, game: 'cod', name: '880 CP', diamond: 880, price: 195000, bonus: '+100 Bonus', status: 'active' },
+            { id: 47, game: 'cod', name: '1320 CP', diamond: 1320, price: 290000, bonus: '+200 Bonus', status: 'active' },
+            { id: 48, game: 'cod', name: '2400 CP', diamond: 2400, price: 520000, bonus: '+400 Bonus', status: 'active' },
+            { id: 49, game: 'cod', name: '5000 CP', diamond: 5000, price: 1070000, bonus: '+1000 Bonus', status: 'active' },
+            { id: 50, game: 'cod', name: '10000 CP', diamond: 10000, price: 2120000, bonus: '+2500 Bonus', status: 'active' }
         ];
         localStorage.setItem('products', JSON.stringify(products));
     }
